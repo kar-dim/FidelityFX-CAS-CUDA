@@ -1,7 +1,6 @@
 #include "CAS.cuh"
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
-#include "stdio.h"
 #include "helper_math.h"
 
 //main CAS kernel (ReShade based)

@@ -154,7 +154,6 @@ xcopy "$(ProjectDir)libs\zlib\bin\zlib1.dll" "$(SolutionDir)x64\Release LineInfo
   <ItemGroup>
     <ClInclude Include="CAS.cuh" />
     <ClInclude Include="CASImpl.cuh" />
-    <ClInclude Include="CASLib.h" />
     <ClInclude Include="cuda_utils.hpp" />
     <ClInclude Include="helper_math.h" />
     <ClInclude Include="include\CASLibWrapper.h" />

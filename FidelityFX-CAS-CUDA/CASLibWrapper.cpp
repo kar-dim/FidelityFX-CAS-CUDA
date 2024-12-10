@@ -12,7 +12,7 @@ extern "C" {
         CASImpl* cas = static_cast<CASImpl*>(casImpl);
         cas->reinitialize(rows, cols, sharpenStrength, contrastAdaption);
     }
-    CAS_API unsigned char* CAS_sharpenImage(void* casImpl, const unsigned char* inputImage)
+    CAS_API const unsigned char* CAS_sharpenImage(void* casImpl, const unsigned char* inputImage)
     {
         CASImpl* cas = static_cast<CASImpl*>(casImpl);
         return cas->sharpenImage(inputImage);

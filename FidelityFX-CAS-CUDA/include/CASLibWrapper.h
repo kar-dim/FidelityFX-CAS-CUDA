@@ -9,7 +9,7 @@ extern "C" {
 #endif
     CAS_API void* CAS_initialize(const unsigned int rows, const unsigned int cols, const float sharpenStrength, const float contrastAdaption);
     CAS_API void CAS_reinitialize(void* casImpl, const unsigned int rows, const unsigned int cols, const float sharpenStrength, const float contrastAdaption);
-    CAS_API unsigned char* CAS_sharpenImage(void * casImpl, const unsigned char* inputImage);
+    CAS_API const unsigned char* CAS_sharpenImage(void* casImpl, const unsigned char* inputImage);
     CAS_API void CAS_destroy(void* casImpl);
 
 #ifdef __cplusplus

@@ -2,11 +2,10 @@
 #include "CASImpl.cuh"
 #include "cuda_utils.hpp"
 #include <cuda_runtime.h>
-#include <type_traits>
 
 void CASImpl::initializeMemory(const unsigned int rows, const unsigned int cols)
 {
-	//initialize CAS output buffer
+	//initialize CAS output buffers and pinned memory for output
 	cudaMallocAsync(&casOutputBufferR, sizeof(unsigned char) * rows * cols, streamR);
 	cudaMallocAsync(&casOutputBufferG, sizeof(unsigned char) * rows * cols, streamG);
 	cudaMallocAsync(&casOutputBufferB, sizeof(unsigned char) * rows * cols, streamB);
@@ -139,8 +138,8 @@ void CASImpl::reinitialize(const unsigned int rows, const unsigned int cols, con
 	initializeMemory(rows, cols);
 }
 
-//setup and call main CAS kernel, return sharpened image as an RGB CImg object
-unsigned char* CASImpl::sharpenImage(const unsigned char *inputImage)
+//setup and call main CAS kernel, return sharpened image as unsigned char buffer (pinned memory of this CAS instance)
+const unsigned char* CASImpl::sharpenImage(const unsigned char *inputImage)
 {
 	const dim3 blockSize(16, 16);
 	const dim3 gridSize = cuda_utils::gridSizeCalculate(blockSize, rows, cols);

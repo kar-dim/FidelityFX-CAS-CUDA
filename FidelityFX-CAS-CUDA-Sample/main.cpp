@@ -14,13 +14,23 @@ using std::cout;
 using std::string;
 
 /*!
- *  \brief  Main starting point of the FidelityFX-CAS CUDA implementation
+ *  \brief  Main starting point of the FidelityFX-CAS CUDA Sample usage implementation project.
+ *          A simple working example of applying CAS on an input image. Provides benchmarks
+ *			for measuring total execution time, in order to compare with a CPU implementation.
  *	
  *  \author Dimitris Karatzas
  */
 int main() 
 {
-	cudaFree(0); //initialize cuda with a dummy call (first api cuda call)
+	double totalExecutionTime = 0, cudaInitExecutionTime = 0;
+	//measure cuda context initialization
+	timer::start();
+	cudaFree(0); 
+	timer::end();
+	cudaInitExecutionTime += timer::elapsedSeconds();
+	totalExecutionTime += timer::elapsedSeconds();
+
+	//load parameters from file
 	const INIReader inir("settings.ini");
 	if (inir.ParseError() < 0)
 	{
@@ -34,14 +44,11 @@ int main()
 	int loops = inir.GetInteger("parameters", "loops_for_test", 5);
 	loops = loops <= 0 || loops > 64 ? 5 : loops;
 
-	double totalSecs = 0;
-	//load image from disk with pinned memory
+	//load image from disk
 	timer::start();
 	CImg<unsigned char> diskImage(imagePath.c_str());
 	const int rows = diskImage.height();
 	const int cols = diskImage.width();
-	unsigned char* rgbaPinned;
-	cudaHostAlloc((void**)&rgbaPinned, sizeof(unsigned char) * rows * cols * 4, cudaHostAllocDefault);
 	if (diskImage.spectrum() != 3)
 	{
 		cout << "Image is not RGB\n";
@@ -49,12 +56,10 @@ int main()
 	}
 	// Add empty "A" channel (RGBA), CUDA cannot work with RGB, padding is required
 	diskImage.append(CImg<unsigned char>(cols, rows, 1, 1, 0), 'c');
-	
 	//interleave data [R1, G1, B1, 0, R2, B2, G2, 0....]
 	diskImage.permute_axes("cxyz");
-	std::memcpy(rgbaPinned, diskImage.data(), sizeof(unsigned char) * rows * cols * 4);
 	timer::end();
-	totalSecs += timer::elapsedSeconds();
+	totalExecutionTime += timer::elapsedSeconds();
 
 	if (cols <= 16 || rows <= 16 || rows >= 16384 || cols >= 16384)
 	{
@@ -73,13 +78,14 @@ int main()
 	}
 	cout << "Each test will be executed " << loops << " times. Average time will be shown below\n";
 	cout << "Image size is: " << rows << " rows and " << cols << " columns\n\n";
+	cout << "Time to initialize CUDA context: " << cudaInitExecutionTime << " seconds\n";
 	cout << "Time to load image from disk and initialize CImg object: " << timer::elapsedSeconds() << " seconds\n";
 
 	//initialize CAS algorithm class and execute sharpening
 	timer::start();
 	void* cas = CAS_initialize(rows, cols, sharpenStrength, contrastAdaption);
 	timer::end();
-	totalSecs += timer::elapsedSeconds();
+	totalExecutionTime += timer::elapsedSeconds();
 	cout << "Time to initialize CUDA memory: " << timer::elapsedSeconds() << " seconds\n\n";
 
 	double copyAndKernelSecs = 0.0;
@@ -91,9 +97,9 @@ int main()
 		timer::end();
 		copyAndKernelSecs += timer::elapsedSeconds();
 	}
-	totalSecs += copyAndKernelSecs / loops;
+	totalExecutionTime += copyAndKernelSecs / loops;
 	cout << "Image sharpening using CAS. Image size is " << rows << " rows and " << cols << " columns and parameters:\nSharpen Strength = " << sharpenStrength << "\nContrast Adaption = " <<contrastAdaption << "\n" << executionTime(showFps, copyAndKernelSecs / loops) << "\n\n";
-	cout << "Total execution time: " << totalSecs << " seconds\n";
+	cout << "Total execution time: " << totalExecutionTime << " seconds\n";
 
 	//save watermarked images to disk
 	if (inir.GetBoolean("options", "save_sharpened_file_to_disk", false))

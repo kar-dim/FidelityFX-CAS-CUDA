@@ -1,8 +1,7 @@
 #pragma once
 #include <cuda_runtime.h>
-#include "CASLib.h"
 
-class CAS_API CASImpl
+class CASImpl
 {
 private:
 	cudaStream_t stream, streamR, streamG, streamB;
@@ -21,5 +20,5 @@ public:
 	CASImpl& operator=(const CASImpl& other);
 	~CASImpl();
 	void reinitialize(const unsigned int rows, const unsigned int cols, const float sharpenStrength, const float contrastAdaption);
-	unsigned char* sharpenImage(const unsigned char *inputImage);
+	const unsigned char* sharpenImage(const unsigned char *inputImage);
 };
