@@ -159,7 +159,6 @@ xcopy "$(ProjectDir)libs\zlib\bin\zlib1.dll" "$(SolutionDir)x64\Release LineInfo
     <ClInclude Include="include\CASLibWrapper.h" />
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="CAS.cu" />
     <CudaCompile Include="CASImpl.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

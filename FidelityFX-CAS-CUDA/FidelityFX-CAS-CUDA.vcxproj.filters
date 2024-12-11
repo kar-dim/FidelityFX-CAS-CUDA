@@ -40,8 +40,5 @@
     <CudaCompile Include="CASImpl.cu">
       <Filter>Source Files</Filter>
     </CudaCompile>
-    <CudaCompile Include="CAS.cu">
-      <Filter>Kernels</Filter>
-    </CudaCompile>
   </ItemGroup>
 </Project>

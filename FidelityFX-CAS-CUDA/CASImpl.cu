@@ -149,10 +149,11 @@ const unsigned char* CASImpl::sharpenImage(const unsigned char *inputImage, cons
 	const dim3 gridSize = cuda_utils::gridSizeCalculate(blockSize, rows, cols);
 	//copy input data to texture
 	cuda_utils::copyDataToCudaArray(inputImage, rows, cols, texArray, stream);
+	
 	if (casMode == CASMode::CAS_RGB) 
 	{
 		//enqueue CAS kernel
-		cas_rgb << <gridSize, blockSize, 0, stream >> > (texObj, sharpenStrength, contrastAdaption, casOutputBufferR, casOutputBufferG, casOutputBufferB, rows, cols);
+		cas<CASMode::CAS_RGB> << <gridSize, blockSize, 0, stream >> > (texObj, sharpenStrength, contrastAdaption, casOutputBufferR, casOutputBufferG, casOutputBufferB, casOutputBufferRGB, rows, cols);
 		cudaStreamSynchronize(stream);
 		//copy from GPU to HOST
 		cudaMemcpyAsync(hostOutputBuffer, casOutputBufferR, rows * cols * sizeof(unsigned char), cudaMemcpyDefault, streamR);
@@ -163,7 +164,7 @@ const unsigned char* CASImpl::sharpenImage(const unsigned char *inputImage, cons
 	else 
 	{
 		//enqueue CAS kernel
-		cas_interleaved << <gridSize, blockSize, 0, stream >> > (texObj, sharpenStrength, contrastAdaption, casOutputBufferRGB, rows, cols);
+		cas<CASMode::CAS_INTERLEAVED> << <gridSize, blockSize, 0, stream >> > (texObj, sharpenStrength, contrastAdaption, casOutputBufferR, casOutputBufferG, casOutputBufferB, casOutputBufferRGB, rows, cols);
 		cudaStreamSynchronize(stream);
 		//copy from GPU to HOST
 		cudaMemcpyAsync(hostOutputBuffer, casOutputBufferRGB, rows * cols * sizeof(unsigned char) * 3, cudaMemcpyDefault, stream);

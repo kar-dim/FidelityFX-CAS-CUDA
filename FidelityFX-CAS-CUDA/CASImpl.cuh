@@ -7,6 +7,7 @@ enum CASMode
 	CAS_INTERLEAVED
 };
 
+//Main class responsible for managing CUDA memory and calling the CAS kernel to sharpen the input image
 class CASImpl
 {
 private:

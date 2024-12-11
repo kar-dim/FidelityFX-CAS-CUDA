@@ -7,6 +7,7 @@
 #include <cuda_runtime.h>
 #include <INIReader.h>
 #include <iostream>
+#include <memory>
 #include <string>
 
 using namespace cimg_library;
@@ -42,7 +43,7 @@ int main()
 	const float contrastAdaption = inir.GetFloat("parameters", "contrast_adaption", -1);
 	const bool showFps = inir.GetBoolean("options", "execution_time_in_fps", false);
 	int loops = inir.GetInteger("parameters", "loops_for_test", 5);
-	loops = loops <= 0 || loops > 64 ? 5 : loops;
+	loops = loops <= 0 ? 5 : loops;
 
 	//load image from disk
 	timer::start();
@@ -88,12 +89,14 @@ int main()
 	totalExecutionTime += timer::elapsedSeconds();
 	cout << "Time to initialize CUDA memory: " << timer::elapsedSeconds() << " seconds\n\n";
 
+	//execute sharpening and instantiate CImg to use the pinned memory returned by CAS
 	double copyAndKernelSecs = 0.0;
-	CImg<unsigned char> sharpImage;
+	std::unique_ptr<CImg<unsigned char>> sharpImage;
 	for (int i = 0; i < loops; i++)
 	{
 		timer::start();
-		CAS_sharpenImage(cas, diskImage.data(), 1, sharpenStrength, contrastAdaption);
+		const unsigned char *sharpedRgbBuffer = CAS_sharpenImage(cas, diskImage.data(), 0, sharpenStrength, contrastAdaption);
+		sharpImage = std::make_unique<CImg<unsigned char>>(sharpedRgbBuffer, cols, rows, 1, 3, true);
 		timer::end();
 		copyAndKernelSecs += timer::elapsedSeconds();
 	}
@@ -105,7 +108,7 @@ int main()
 	if (inir.GetBoolean("options", "save_sharpened_file_to_disk", false))
 	{
 		cout << "\nSaving watermarked files to disk...\n";
-		saveCImgAsImage(imagePath, "_CAS", sharpImage);
+		saveCImgAsImage(imagePath, "_CAS", *sharpImage.get());
 		cout << "Successully saved to disk\n";
 	}
 	CAS_destroy(cas);

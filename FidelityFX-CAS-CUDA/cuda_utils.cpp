@@ -43,7 +43,7 @@ namespace cuda_utils
         texDesc.addressMode[1] = cudaAddressModeBorder;
         texDesc.addressMode[2] = cudaAddressModeClamp;
         texDesc.filterMode = cudaFilterModePoint;
-        texDesc.readMode = cudaReadModeNormalizedFloat; // Read as float
+        texDesc.readMode = cudaReadModeNormalizedFloat; // Read as float in [0,1]
         texDesc.normalizedCoords = 0;
         return texDesc;
     }
