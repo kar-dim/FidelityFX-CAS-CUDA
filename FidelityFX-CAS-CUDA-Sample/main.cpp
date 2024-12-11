@@ -83,7 +83,7 @@ int main()
 
 	//initialize CAS algorithm class and execute sharpening
 	timer::start();
-	void* cas = CAS_initialize(rows, cols, sharpenStrength, contrastAdaption);
+	void* cas = CAS_initialize(rows, cols);
 	timer::end();
 	totalExecutionTime += timer::elapsedSeconds();
 	cout << "Time to initialize CUDA memory: " << timer::elapsedSeconds() << " seconds\n\n";
@@ -93,7 +93,7 @@ int main()
 	for (int i = 0; i < loops; i++)
 	{
 		timer::start();
-		CAS_sharpenImage(cas, diskImage.data());
+		CAS_sharpenImage(cas, diskImage.data(), 1, sharpenStrength, contrastAdaption);
 		timer::end();
 		copyAndKernelSecs += timer::elapsedSeconds();
 	}
