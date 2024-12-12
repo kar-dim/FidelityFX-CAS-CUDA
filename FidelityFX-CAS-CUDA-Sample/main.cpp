@@ -1,9 +1,9 @@
 #define cimg_use_png
+#define cimg_use_jpeg
 #include "CASLibWrapper.h"
 #include "utils.hpp"
 #include <CImg.h>
 #include <cstdlib>
-#include <cstring>
 #include <cuda_runtime.h>
 #include <INIReader.h>
 #include <iostream>
@@ -108,7 +108,7 @@ int main()
 	if (inir.GetBoolean("options", "save_sharpened_file_to_disk", false))
 	{
 		cout << "\nSaving watermarked files to disk...\n";
-		saveCImgAsImage(imagePath, "_CAS", *sharpImage.get());
+		saveCImgAsImage(imagePath, "_CAS", *sharpImage.get(), IMAGE_TYPE::PNG);
 		cout << "Successully saved to disk\n";
 	}
 	CAS_destroy(cas);
