@@ -57,14 +57,14 @@
       <PreprocessorDefinitions>WIN32;WIN64;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(ProjectDir)libs\CImg-3.4.3;$(ProjectDir)libs\zlib\include;$(ProjectDir)libs\inih;$(ProjectDir)libs\libpng\include;$(ProjectDir)../FidelityFX-CAS-CUDA/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)libs\CImg-3.4.3;$(ProjectDir)libs\zlib\include;$(ProjectDir)libs\inih;$(ProjectDir)libs\libpng\include;$(ProjectDir)libs\libjpeg\include;$(ProjectDir)../FidelityFX-CAS-CUDA/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>cudart_static.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;zlibd.lib;libpng16d.lib;FidelityFX-CAS-CUDA.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)libs\zlib\lib;$(ProjectDir)libs\libpng\lib;$(SolutionDir)x64/Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cudart_static.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;zlibd.lib;libpng16d.lib;jpeg.lib;FidelityFX-CAS-CUDA.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)libs\zlib\lib;$(ProjectDir)libs\libpng\lib;$(ProjectDir)libs\libjpeg\lib;$(SolutionDir)x64/Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>LIBCMT</IgnoreSpecificDefaultLibraries>
     </Link>
     <CudaCompile>
@@ -74,7 +74,8 @@
     </CudaCompile>
     <PostBuildEvent>
       <Command>xcopy "$(ProjectDir)libs\libpng\bin\libpng16d.dll" "$(SolutionDir)x64\Debug\" /y /D
-xcopy "$(ProjectDir)libs\zlib\bin\zlibd1.dll" "$(SolutionDir)x64\Debug\" /y /D</Command>
+xcopy "$(ProjectDir)libs\zlib\bin\zlibd1.dll" "$(SolutionDir)x64\Debug\" /y /D
+xcopy "$(ProjectDir)libs\libjpeg\bin\debug\jpeg62.dll" "$(SolutionDir)x64\Debug\" /y /D</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -86,7 +87,7 @@ xcopy "$(ProjectDir)libs\zlib\bin\zlibd1.dll" "$(SolutionDir)x64\Debug\" /y /D</
       <PreprocessorDefinitions>WIN32;WIN64;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(ProjectDir)libs\CImg-3.4.3;$(ProjectDir)libs\zlib\include;$(ProjectDir)libs\inih;$(ProjectDir)libs\libpng\include;$(ProjectDir)../FidelityFX-CAS-CUDA/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)libs\CImg-3.4.3;$(ProjectDir)libs\zlib\include;$(ProjectDir)libs\inih;$(ProjectDir)libs\libpng\include;$(ProjectDir)../FidelityFX-CAS-CUDA/include;$(ProjectDir)libs\libjpeg\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -94,8 +95,8 @@ xcopy "$(ProjectDir)libs\zlib\bin\zlibd1.dll" "$(SolutionDir)x64\Debug\" /y /D</
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>cudart_static.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;zlib.lib;libpng16.lib;FidelityFX-CAS-CUDA.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)libs\zlib\lib;$(ProjectDir)libs\libpng\lib;$(SolutionDir)x64/Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cudart_static.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;zlib.lib;libpng16.lib;jpeg.lib;FidelityFX-CAS-CUDA.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)libs\zlib\lib;$(ProjectDir)libs\libpng\lib;$(ProjectDir)libs\libjpeg\lib;$(SolutionDir)x64/Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>LIBCMT</IgnoreSpecificDefaultLibraries>
     </Link>
     <CudaCompile>
@@ -105,7 +106,8 @@ xcopy "$(ProjectDir)libs\zlib\bin\zlibd1.dll" "$(SolutionDir)x64\Debug\" /y /D</
     </CudaCompile>
     <PostBuildEvent>
       <Command>xcopy "$(ProjectDir)libs\libpng\bin\libpng16.dll" "$(SolutionDir)x64\Release\" /y /D
-xcopy "$(ProjectDir)libs\zlib\bin\zlib1.dll" "$(SolutionDir)x64\Release\" /y /D</Command>
+xcopy "$(ProjectDir)libs\zlib\bin\zlib1.dll" "$(SolutionDir)x64\Release\" /y /D
+xcopy "$(ProjectDir)libs\libjpeg\bin\release\jpeg62.dll" "$(SolutionDir)x64\Release\" /y /D</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

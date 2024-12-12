@@ -13,10 +13,10 @@ string addSuffixBeforeExtension(const string& file, const string& suffix)
 	return dot == string::npos ? file + suffix : file.substr(0, dot) + suffix + file.substr(dot);
 }
 
-void saveCImgAsImage(const string& imagePath, const string& suffix, const CImg<float>& cimg)
+void saveCImgAsImage(const string& imagePath, const string& suffix, const CImg<float>& cimg, const IMAGE_TYPE type)
 {
 	const string newFileName = addSuffixBeforeExtension(imagePath, suffix);
-	cimg.save_png(newFileName.c_str());
+	type == IMAGE_TYPE::PNG ? cimg.save_png(newFileName.c_str()) : cimg.save_jpeg(newFileName.c_str(), 100);
 }
 
 //calculate execution time in seconds, or show FPS value
