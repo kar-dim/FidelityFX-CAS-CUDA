@@ -6,7 +6,7 @@
 void CASImpl::initializeMemory(const unsigned int rows, const unsigned int cols)
 {
 	//initialize CAS output buffers and pinned memory for output
-	cudaMallocAsync(&casOutputBufferRGB, sizeof(unsigned char) * rows * cols * 3, stream);
+	cudaMallocAsync(&casOutputBufferRGB, sizeof(uchar3) * rows * cols, stream);
 	cudaMallocAsync(&casOutputBufferR, sizeof(unsigned char) * rows * cols, streamR);
 	cudaMallocAsync(&casOutputBufferG, sizeof(unsigned char) * rows * cols, streamG);
 	cudaMallocAsync(&casOutputBufferB, sizeof(unsigned char) * rows * cols, streamB);
@@ -167,7 +167,7 @@ const unsigned char* CASImpl::sharpenImage(const unsigned char *inputImage, cons
 		cas<CASMode::CAS_INTERLEAVED> << <gridSize, blockSize, 0, stream >> > (texObj, sharpenStrength, contrastAdaption, casOutputBufferR, casOutputBufferG, casOutputBufferB, casOutputBufferRGB, rows, cols);
 		cudaStreamSynchronize(stream);
 		//copy from GPU to HOST
-		cudaMemcpyAsync(hostOutputBuffer, casOutputBufferRGB, rows * cols * sizeof(unsigned char) * 3, cudaMemcpyDefault, stream);
+		cudaMemcpyAsync(hostOutputBuffer, casOutputBufferRGB, rows * cols * sizeof(uchar3), cudaMemcpyDefault, stream);
 		cudaStreamSynchronize(stream);
 	}
 	return hostOutputBuffer;

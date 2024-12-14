@@ -16,7 +16,7 @@ __device__ inline unsigned char normalizedFloatToUchar(const float value)
 
 //Main CAS kernel
 template<const int casMode>
-__global__ void cas(cudaTextureObject_t texObj, const float sharpenStrength, const float contrastAdaption, unsigned char* casOutputR, unsigned char* casOutputG, unsigned char* casOutputB, unsigned char* casOutputRGB, const unsigned int height, const unsigned int width)
+__global__ void cas(cudaTextureObject_t texObj, const float sharpenStrength, const float contrastAdaption, unsigned char* casOutputR, unsigned char* casOutputG, unsigned char* casOutputB, uchar3* casOutputRGB, const unsigned int height, const unsigned int width)
 {
 	const int x = blockIdx.x * blockDim.x + threadIdx.x;
 	const int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -79,8 +79,6 @@ __global__ void cas(cudaTextureObject_t texObj, const float sharpenStrength, con
 	//interleaved mode, write RGB consecutively (uncoalesced writes, low performance hit, may optimize)
 	else
 	{
-		casOutputRGB[outputIndex * 3] = colorR;
-		casOutputRGB[outputIndex * 3 + 1] = colorG;
-		casOutputRGB[outputIndex * 3 + 2] = colorB;
+		casOutputRGB[outputIndex] = make_uchar3(colorR, colorG, colorB);
 	}
 }

@@ -14,7 +14,8 @@ private:
 	cudaStream_t stream, streamR, streamG, streamB;
 	cudaTextureObject_t texObj;
 	cudaArray* texArray;
-	unsigned char* casOutputBufferR, *casOutputBufferG, *casOutputBufferB, *casOutputBufferRGB;
+	unsigned char* casOutputBufferR, *casOutputBufferG, *casOutputBufferB;
+	uchar3 *casOutputBufferRGB;
 	unsigned char* hostOutputBuffer;
 	unsigned int rows, cols;
 	void initializeMemory(const unsigned int rows, const unsigned int cols);

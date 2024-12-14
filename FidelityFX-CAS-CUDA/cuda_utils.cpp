@@ -19,7 +19,7 @@ namespace cuda_utils
         cudaArray* cuArray;
         auto cudaChannelDescriptor = cudaCreateChannelDesc<uchar4>();
         cudaExtent extent = make_cudaExtent(cols, rows, 1); // Single-layer array
-        auto z = cudaMalloc3DArray(&cuArray, &cudaChannelDescriptor, extent);
+        cudaMalloc3DArray(&cuArray, &cudaChannelDescriptor, extent);
         return cuArray;
     }
 
@@ -52,7 +52,7 @@ namespace cuda_utils
     cudaTextureObject_t createTextureObject(const cudaResourceDesc& pResDesc, const cudaTextureDesc& pTexDesc)
     {
         cudaTextureObject_t texObj = 0;
-        auto z = cudaCreateTextureObject(&texObj, &pResDesc, &pTexDesc, NULL);
+        cudaCreateTextureObject(&texObj, &pResDesc, &pTexDesc, NULL);
         return texObj;
     }
 
