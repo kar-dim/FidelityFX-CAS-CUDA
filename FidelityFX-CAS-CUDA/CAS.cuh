@@ -3,13 +3,13 @@
 #include "helper_math.h"
 
 //faster linear interpolation by using FMA operations
-__device__ inline float3 fastLerp(float3 v0, float3 v1, float t)
+__device__ inline float3 fastLerp(const float3 v0, const float3 v1, const float t)
 {
 	return make_float3(fma(t, v1.x, fma(-t, v0.x, v0.x)), fma(t, v1.y, fma(-t, v0.y, v0.y)), fma(t, v1.z, fma(-t, v0.z, v0.z)));
 }
 
 //convert a float in the range [0,1] to an unsigned char in the range [0,255]
-__device__ inline unsigned char normalizedFloatToUchar(float value)
+__device__ inline unsigned char normalizedFloatToUchar(const float value)
 {
 	return static_cast<unsigned char>(clamp(value * 255.0f, 0.0f, 255.0f));
 }
@@ -53,16 +53,16 @@ __global__ void cas(cudaTextureObject_t texObj, const float sharpenStrength, con
 	mxRGB += mxRGB2;
 
 	// Smooth minimum distance to signal limit divided by smooth max.
-	float3 ampRGB = clamp(fminf(mnRGB, 2.0 - mxRGB) / mxRGB, 0.0f, 1.0f);
+	float3 ampRGB = clamp(fminf(mnRGB, 2.0f - mxRGB) / mxRGB, 0.0f, 1.0f);
 
 	// Shaping amount of sharpening.
-	const float3 wRGB = -sqrtf(ampRGB) / (-3.0 * contrastAdaption + 8.0);
+	const float3 wRGB = -sqrtf(ampRGB) / (-3.0f * contrastAdaption + 8.0f);
 
 	//						  0 w 0
 	//  Filter shape:		  w 1 w
 	//						  0 w 0  
 	const float3 filterWindow = (b + d) + (f + h);
-	const float3 outColor = saturate((filterWindow * wRGB + e) / (4.0 * wRGB + 1.0));
+	const float3 outColor = saturate((filterWindow * wRGB + e) / (4.0f * wRGB + 1.0f));
 	const float3 sharpenedValues = fastLerp(e, outColor, sharpenStrength);
 
 	//write to global memory
