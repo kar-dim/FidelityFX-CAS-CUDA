@@ -1484,7 +1484,7 @@ inline __device__ float3 saturate(float3 x)
     return make_float3(__saturatef(x.x), __saturatef(x.y), __saturatef(x.z));
 }
 
-inline __host__ __device__ float3 operator-(float3 a)
+inline __device__ float3 operator-(float3 a)
 {
     return make_float3(-a.x, -a.y, -a.z);
 }
