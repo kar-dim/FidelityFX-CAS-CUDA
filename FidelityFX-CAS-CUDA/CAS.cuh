@@ -1,7 +1,6 @@
 #pragma once
 #include <cuda_runtime.h>
 #include "helper_math.h"
-#include "stdio.h"
 
 //faster linear interpolation by using FMA operations
 __device__ inline float3 fastLerp(const float3 v0, const float3 v1, const float t)
