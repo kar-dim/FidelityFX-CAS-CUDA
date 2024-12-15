@@ -1466,10 +1466,17 @@ inline __device__ __host__ float4 smoothstep(float4 a, float4 b, float4 x)
     return (y * y * (make_float4(3.0f) - (make_float4(2.0f) * y)));
 }
 
+////////////////////////////////////////////////////////////////////////////////
 //CAS only functions
-inline __device__ float3 sqrtf(float3 x)
+////////////////////////////////////////////////////////////////////////////////
+inline __device__ float3 rsqrtf(float3 x)
 {
-    return make_float3(sqrtf(x.x), sqrtf(x.y), sqrtf(x.z));
+    return make_float3(rsqrtf(x.x), rsqrtf(x.y), rsqrtf(x.z));
+}
+
+inline __device__ float3 rcp(float3 x)
+{
+    return make_float3(__frcp_rn(x.x), __frcp_rn(x.y), __frcp_rn(x.z));
 }
 
 inline __device__ float3 saturate(float3 x)
