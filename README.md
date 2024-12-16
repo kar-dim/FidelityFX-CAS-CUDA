@@ -14,8 +14,8 @@ It is used in 3D Graphics frameworks like DX12 and Vulkan, and provides a mixed 
 </p>
 
 This project implements CAS as a CUDA kernel. The main reasons for porting CAS to CUDA are:
-1. General purpose. Because CAS is technically a filter, it can also be used for sharpening static images (like local from disk). The original CAS filter works only in 3D graphics frameworks.
-2. Speed. By implementing the CAS algorithm efficiently in CUDA, we can expect major speedups compared to CPU implementations by leveraging the GPU's high performance in parallel problems (like filtering in this case).
+1. General purpose. Because CAS is technically a filter, it can also be used for sharpening static images (like local files from disk). The original CAS filter works only in 3D graphics frameworks.
+2. Speed. By implementing the CAS algorithm efficiently in CUDA, we can expect major speedups compared to CPU implementations by leveraging the GPU's high performance in parallel problems.
 
 Τhis repository has two projects:
 
