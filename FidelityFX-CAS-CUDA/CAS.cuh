@@ -2,19 +2,18 @@
 #include <cuda_runtime.h>
 #include "helper_math.h"
 
-//faster linear interpolation by using FMA operations
-__device__ inline float3 fastLerp(const float3 v0, const float3 v1, const float t)
-{
-	return make_float3(fma(t, v1.x, fma(-t, v0.x, v0.x)), fma(t, v1.y, fma(-t, v0.y, v0.y)), fma(t, v1.z, fma(-t, v0.z, v0.z)));
-}
-
-//convert a float in the range [0,1] to an unsigned char in the range [0,255]
-__device__ inline unsigned char normalizedFloatToUchar(const float value)
-{
-	return static_cast<unsigned char>(clamp(value * 255.0f, 0.0f, 255.0f));
-}
-
 //Main CAS kernel
+//Input: texObj: input (sRGB) texture object
+//		 sharpenStrength: sharpening strength
+//		 contrastAdaption: contrast adaption
+//		 casOutputR: output R channel
+//		 casOutputG: output G channel
+//		 casOutputB: output B channel
+//		 casOutputRGB: output RGB interleaved
+//		 height: height of the input texture
+//		 width: width of the input texture
+//		 casMode: 0 for RGB mode (write to casOutputR,G and B buffers), 1 for interleaved mode (write to casOutputRGB buffer)
+//Output: None
 template<const int casMode>
 __global__ void cas(cudaTextureObject_t texObj, const float sharpenStrength, const float contrastAdaption, unsigned char* casOutputR, unsigned char* casOutputG, unsigned char* casOutputB, uchar3* casOutputRGB, const unsigned int height, const unsigned int width)
 {
@@ -67,9 +66,9 @@ __global__ void cas(cudaTextureObject_t texObj, const float sharpenStrength, con
 	const float3 sharpenedValues = fastLerp(e, outColor, sharpenStrength);
 
 	//write to global memory
-	const unsigned char colorR = normalizedFloatToUchar(sharpenedValues.x);
-	const unsigned char colorG = normalizedFloatToUchar(sharpenedValues.y);
-	const unsigned char colorB = normalizedFloatToUchar(sharpenedValues.z);
+	const unsigned char colorR = normalizedFloatToUchar(linearToSRGB(sharpenedValues.x));
+	const unsigned char colorG = normalizedFloatToUchar(linearToSRGB(sharpenedValues.y));
+	const unsigned char colorB = normalizedFloatToUchar(linearToSRGB(sharpenedValues.z));
 	//RGB mode, write to 3 channels separately
 	if constexpr (casMode == 0)
 	{

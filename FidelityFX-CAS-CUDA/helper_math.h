@@ -1469,16 +1469,20 @@ inline __device__ __host__ float4 smoothstep(float4 a, float4 b, float4 x)
 ////////////////////////////////////////////////////////////////////////////////
 //CAS only functions
 ////////////////////////////////////////////////////////////////////////////////
+
+//reciprocal square root of x
 inline __device__ float3 rsqrtf(float3 x)
 {
     return make_float3(rsqrtf(x.x), rsqrtf(x.y), rsqrtf(x.z));
 }
 
+//reciprocal of x
 inline __device__ float3 rcp(float3 x)
 {
     return make_float3(__frcp_rn(x.x), __frcp_rn(x.y), __frcp_rn(x.z));
 }
 
+//clamp values to [0,1]
 inline __device__ float3 saturate(float3 x)
 {
     return make_float3(__saturatef(x.x), __saturatef(x.y), __saturatef(x.z));
@@ -1487,6 +1491,30 @@ inline __device__ float3 saturate(float3 x)
 inline __device__ float3 operator-(float3 a)
 {
     return make_float3(-a.x, -a.y, -a.z);
+}
+
+//faster linear interpolation by using FMA operations
+inline __device__  float3 fastLerp(const float3 v0, const float3 v1, const float t)
+{
+    return make_float3(fma(t, v1.x, fma(-t, v0.x, v0.x)), fma(t, v1.y, fma(-t, v0.y, v0.y)), fma(t, v1.z, fma(-t, v0.z, v0.z)));
+}
+
+//convert a float in the range [0,1] to an unsigned char in the range [0,255]
+inline __device__ unsigned char normalizedFloatToUchar(const float value)
+{
+    return static_cast<unsigned char>(clamp(value * 255.0f, 0.0f, 255.0f));
+}
+
+//convert a linear RGB value to sRGB value
+inline __device__ float linearToSRGB(const float linearColor)
+{
+    return linearColor <= 0.0031308f ? linearColor * 12.92f : 1.055f * __powf(linearColor, 0.416667f) - 0.055f;
+}
+
+//convert a linear RGB color value to sRGB color value ("A" channel unused)
+inline __device__ float3 linearToSRGB(const float4 linearColor)
+{
+	return make_float3(linearToSRGB(linearColor.x), linearToSRGB(linearColor.y), linearToSRGB(linearColor.z));
 }
 
 #endif

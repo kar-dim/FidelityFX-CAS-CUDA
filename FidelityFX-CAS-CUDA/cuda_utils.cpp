@@ -33,8 +33,10 @@ namespace cuda_utils
         return resDesc;
     }
 
-    //creates a cudaTextureDesc with these properties:
-    //Border addressing mode, point filtering mode, normalized float [0,1] read mode, non-normalized coords
+    //Creates a cudaTextureDesc with these properties:
+    //Border addressing mode, point filtering mode,
+    //sRGB to linear conversion in hardware,
+    //normalized float [0,1] read mode, non-normalized coords
     cudaTextureDesc createTextureDescriptor()
     {
         struct cudaTextureDesc texDesc;
@@ -42,6 +44,7 @@ namespace cuda_utils
         texDesc.addressMode[0] = cudaAddressModeBorder;
         texDesc.addressMode[1] = cudaAddressModeBorder;
         texDesc.addressMode[2] = cudaAddressModeClamp;
+        texDesc.sRGB = 1;
         texDesc.filterMode = cudaFilterModePoint;
         texDesc.readMode = cudaReadModeNormalizedFloat; // Read as float in [0,1]
         texDesc.normalizedCoords = 0;
