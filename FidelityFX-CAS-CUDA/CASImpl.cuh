@@ -18,6 +18,8 @@ private:
 	uchar3 *casOutputBufferRGB;
 	unsigned char* hostOutputBuffer;
 	unsigned int rows, cols;
+	const dim3 blockSize { 16, 16 };
+
 	void initializeMemory(const unsigned int rows, const unsigned int cols);
 	void destroyBuffers();
 public:

@@ -79,16 +79,15 @@ namespace cuda_utils
         return std::make_pair(texObj, cuArray);
     }
 
-    //copy data to Device Array
-    void copyDataToCudaArray(const unsigned char *data, const unsigned int rows, const unsigned int cols, cudaArray* cuArray, cudaStream_t stream)
+    //copy Host data to Device Array
+    void copyDataToCudaArrayAsync(const unsigned char *data, const unsigned int rows, const unsigned int cols, cudaArray* cuArray, cudaStream_t stream)
     {
         cudaMemcpy3DParms copyParams = { 0 };
-        copyParams.kind = cudaMemcpyDefault;
+        copyParams.kind = cudaMemcpyHostToDevice;
         copyParams.dstArray = cuArray;
         // Interleaved data in packed [r, g, b, 0, r, g, b, 0...] format
         copyParams.srcPtr = make_cudaPitchedPtr((void*)data, cols * 4 * sizeof(unsigned char), cols, rows);
         copyParams.extent = make_cudaExtent(cols, rows, 1); // Depth is 1 because all channels are interleaved per pixel
         cudaMemcpy3DAsync(&copyParams, stream);
-        cudaStreamSynchronize(stream);
     }
 }
