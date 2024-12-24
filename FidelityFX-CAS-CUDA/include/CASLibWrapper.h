@@ -14,7 +14,9 @@ extern "C" {
     CAS_API void CAS_reinitialize(void* casImpl, const int hasAlpha, const unsigned int rows, const unsigned int cols);
 
     //sharpen the input image and return a pinned memory buffer with the sharpened RGB(A) data
-    CAS_API const unsigned char* CAS_sharpenImage(void* casImpl, const unsigned char* inputImage, const float sharpenStrength, const float contrastAdaption);
+	//casMode = 0: CAS kernel will write RGB planar data (RRRR....GGGG....BBBB....AAAA....)
+	//casMode = 1: CAS kernel will write RGBA interleaved data (RGBA....RGBA....)
+    CAS_API const unsigned char* CAS_sharpenImage(void* casImpl, const int casMode, const unsigned char* inputImage, const float sharpenStrength, const float contrastAdaption);
     
     //free internal memory
     CAS_API void CAS_destroy(void* casImpl);

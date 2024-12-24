@@ -1,6 +1,12 @@
 #pragma once
 #include <cuda_runtime.h>
 
+enum CASMode 
+{
+	PLANAR_RGB,
+	INTERLEAVED_RGBA
+};
+
 //Main class responsible for managing CUDA memory and calling the CAS kernel to sharpen the input image
 class CASImpl
 {
@@ -24,5 +30,5 @@ public:
 	CASImpl& operator=(const CASImpl& other);
 	~CASImpl();
 	void reinitializeMemory(const bool hasAlpha, const unsigned int rows, const unsigned int cols);
-	const unsigned char* sharpenImage(const unsigned char* inputImage, const float sharpenStrength, const float contrastAdaption);
+	const unsigned char* sharpenImage(const unsigned char* inputImage, const int casMode, const float sharpenStrength, const float contrastAdaption);
 };

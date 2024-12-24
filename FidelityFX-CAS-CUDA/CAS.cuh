@@ -4,6 +4,7 @@
 
 //Main CAS kernel
 //Template: hasAlpha: whether the input image has an alpha channel
+//			casMode: whether the output image should be written as interleaved RGBA or planar RGB
 //Input: texObj: input (sRGB) texture object
 //		 sharpenStrength: sharpening strength
 //		 contrastAdaption: contrast adaption
@@ -11,7 +12,7 @@
 //		 height: height of the input texture
 //		 width: width of the input texture
 //Output: None
-template <const bool hasAlpha>
+template <const bool hasAlpha, const int casMode>
 __global__ void cas(cudaTextureObject_t texObj, const float sharpenStrength, const float contrastAdaption, unsigned char* casOutput, const unsigned int height, const unsigned int width)
 {
 	const int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -31,7 +32,10 @@ __global__ void cas(cudaTextureObject_t texObj, const float sharpenStrength, con
 	{
 		if (currentPixel.w == 0)
 		{
-			casOutput[4 * outputIndex + 3] = 0;
+			if constexpr (casMode == 0)
+				casOutput[width * height * 3 + outputIndex] = 0;
+			else
+				casOutput[4 * outputIndex + 3] = 0;
 			return;
 		}	
 	}
@@ -76,18 +80,24 @@ __global__ void cas(cudaTextureObject_t texObj, const float sharpenStrength, con
 	const unsigned char colorR = normalizedFloatToUchar(linearToSRGB(sharpenedValues.x));
 	const unsigned char colorG = normalizedFloatToUchar(linearToSRGB(sharpenedValues.y));
 	const unsigned char colorB = normalizedFloatToUchar(linearToSRGB(sharpenedValues.z));
-	//interleaved mode, write RGB(A) consecutively (uncoalesced writes, low performance hit, may optimize)
-	if constexpr (hasAlpha)
+	
+	//Write to global memory based on template params
+	//If hasAlpha is true, write the alpha channel as well
+	//if casMode == 0 -> write planar RGB
+	if constexpr (casMode == 0)
+	{
+		casOutput[outputIndex] = colorR;
+		casOutput[width * height + outputIndex] = colorG;
+		casOutput[width * height * 2 + outputIndex] = colorB;
+		if constexpr (hasAlpha)
+			casOutput[width * height * 3 + outputIndex] = normalizedFloatToUchar(currentPixel.w);
+	}
+	else
 	{
 		casOutput[4 * outputIndex] = colorR;
 		casOutput[4 * outputIndex + 1] = colorG;
 		casOutput[4 * outputIndex + 2] = colorB;
-		casOutput[4 * outputIndex + 3] = normalizedFloatToUchar(currentPixel.w);
+		if constexpr (hasAlpha)
+			casOutput[4 * outputIndex + 3] = normalizedFloatToUchar(currentPixel.w);
 	}
-	else
-	{
-		casOutput[3 * outputIndex] = colorR;
-		casOutput[3 * outputIndex + 1] = colorG;
-		casOutput[3 * outputIndex + 2] = colorB;
-	}	
 }

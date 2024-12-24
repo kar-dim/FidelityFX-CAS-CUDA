@@ -15,10 +15,10 @@ extern "C" {
         cas->reinitializeMemory(hasAlpha, rows, cols);
     }
 
-    CAS_API const unsigned char* CAS_sharpenImage(void* casImpl, const unsigned char* inputImage, const float sharpenStrength, const float contrastAdaption)
+    CAS_API const unsigned char* CAS_sharpenImage(void* casImpl, const int casMode, const unsigned char* inputImage, const float sharpenStrength, const float contrastAdaption)
     {
         CASImpl* cas = static_cast<CASImpl*>(casImpl);
-        return cas->sharpenImage(inputImage, sharpenStrength, contrastAdaption);
+        return cas->sharpenImage(inputImage, casMode, sharpenStrength, contrastAdaption);
     }
 
     CAS_API void CAS_destroy(void* casImpl)

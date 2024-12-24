@@ -103,10 +103,8 @@ int main()
 	for (int i = 0; i < loops; i++)
 	{
 		timer::start();
-		const unsigned char *sharpedRgbBuffer = CAS_sharpenImage(cas, diskImage.data(), sharpenStrength, contrastAdaption);
-		sharpImage = std::make_unique<CImg<unsigned char>>(sharpedRgbBuffer, channels, cols, rows, 1, false);
-		//CImg works with planar data only, a simple permutation is required (a memcpy cannot be avoided here)
-		sharpImage->permute_axes("yzcx"); 
+		const unsigned char *sharpedRgbBuffer = CAS_sharpenImage(cas, 0, diskImage.data(), sharpenStrength, contrastAdaption);
+		sharpImage = std::make_unique<CImg<unsigned char>>(sharpedRgbBuffer, cols, rows, 1, channels, true);
 		timer::end();
 		copyAndKernelSecs += timer::elapsedSeconds();
 	}
