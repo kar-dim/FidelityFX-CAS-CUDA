@@ -22,6 +22,7 @@ private:
 
 	void initializeMemory(const unsigned int rows, const unsigned int cols);
 	void destroyBuffers();
+	void moveData(CASImpl&& other) noexcept;
 public:
 	CASImpl(const bool hasAlpha, const unsigned int rows, const unsigned int cols);
 	CASImpl(const CASImpl& other);

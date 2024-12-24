@@ -2,6 +2,7 @@
 #include "CASImpl.cuh"
 #include "cuda_utils.hpp"
 #include <cuda_runtime.h>
+#include <type_traits>
 
 void CASImpl::initializeMemory(const unsigned int rows, const unsigned int cols)
 {
@@ -32,21 +33,27 @@ CASImpl::CASImpl(const CASImpl& other):
 	initializeMemory(rows, cols);
 }
 
-//move constructor
-CASImpl::CASImpl(CASImpl&& other) noexcept :
-	hasAlpha(other.hasAlpha), rows(other.rows), cols(other.rows)
+//helper method for moving data between CAS instances
+void CASImpl::moveData(CASImpl&& other) noexcept
 {
-	//move buffers and texture data and nullify other
-	casOutputBuffer = other.casOutputBuffer;
-	hostOutputBuffer = other.hostOutputBuffer;
+	static constexpr auto moveMember = [](auto& thisData, auto& otherData) { thisData = otherData; otherData = nullptr; };
+	rows = other.rows;
+	cols = other.cols;
+	hasAlpha = other.hasAlpha;
+	//move buffer/pointer data between this and other
+	moveMember(hostOutputBuffer, other.hostOutputBuffer);
+	moveMember(casOutputBuffer, other.casOutputBuffer);
+	moveMember(stream, other.stream);
+	moveMember(texArray, other.texArray);
+	//move texture object
 	texObj = other.texObj;
-	texArray = other.texArray;
-	stream = other.stream;
-	other.casOutputBuffer = nullptr;
-	other.hostOutputBuffer = nullptr;
 	other.texObj = 0;
-	other.stream = nullptr;
-	other.texArray = nullptr;
+}
+
+//move constructor
+CASImpl::CASImpl(CASImpl&& other) noexcept
+{
+	moveData(std::move(other));
 }
 
 //move assignment
@@ -54,25 +61,10 @@ CASImpl& CASImpl::operator=(CASImpl&& other) noexcept
 {
 	if (this != &other)
 	{
-		rows = other.rows;
-		cols = other.cols;
-		hasAlpha = other.hasAlpha;
-		//move pitched memory
-		cudaFreeHost(hostOutputBuffer);
-		hostOutputBuffer = other.hostOutputBuffer;
-		other.hostOutputBuffer = nullptr;
-		//move streams
+		//delete old buffers and stream and move data from other to this
+		destroyBuffers();
 		cuda_utils::cudaStreamsDestroy(stream);
-		stream = other.stream;
-		other.stream = nullptr;
-		//move texture object
-		cudaDestroyTextureObject(texObj);
-		texObj = other.texObj;
-		other.texObj = 0;
-		//move texture array
-		cudaFreeArray(texArray);
-		texArray = other.texArray;
-		other.texArray = nullptr;
+		moveData(std::move(other));
 	}
 	return *this;
 }
@@ -80,23 +72,19 @@ CASImpl& CASImpl::operator=(CASImpl&& other) noexcept
 //copy assignment
 CASImpl& CASImpl::operator=(const CASImpl& other)
 {
-	if (this != &other)
+	if (this != &other) 
 	{
-		rows = other.rows;
-		cols = other.cols;
-		hasAlpha = other.hasAlpha;
-		cudaFreeHost(hostOutputBuffer);
-		cudaDestroyTextureObject(texObj);
-		cudaFreeArray(texArray);
-		initializeMemory(rows, cols);
+		//no need to reinitialize streams, only buffers
+		reinitializeMemory(other.hasAlpha, other.rows, other.cols);
 	}
 	return *this;
 }
 
+//delete all buffers
 void CASImpl::destroyBuffers()
 {
-	static constexpr auto destroy = [](auto&& resource, auto&& deleter) { if (resource) deleter(resource); };
-	static constexpr auto destroyAsync = [](auto&& resource, auto&& stream, auto&& deleter) { if (resource) deleter(resource, stream); };
+	static constexpr auto destroy = [](auto& resource, auto& deleter) { if (resource) deleter(resource); };
+	static constexpr auto destroyAsync = [](auto& resource, auto& stream, auto& deleter) { if (resource) deleter(resource, stream); };
 	destroyAsync(casOutputBuffer, stream, cudaFreeAsync);
 	destroy(texObj, cudaDestroyTextureObject);
 	destroy(texArray, cudaFreeArray);
