@@ -4,6 +4,7 @@
 #include <cuda_runtime.h>
 #include <type_traits>
 
+//initialize buffers and texture data based on the provided image dimensions
 void CASImpl::initializeMemory(const unsigned int rows, const unsigned int cols)
 {
 	const int channels = hasAlpha ? 4 : 3;
@@ -118,28 +119,18 @@ const unsigned char* CASImpl::sharpenImage(const unsigned char *hostRgbPtr, cons
 	//copy input data to texture
 	cuda_utils::copyDataToCudaArrayAsync(hostRgbPtr, rows, cols, texArray, stream);
 	cudaStreamSynchronize(stream);
-	if (hasAlpha) 
-	{
-		//enqueue CAS kernel (with alpha channel output)
-		if (casMode == PLANAR_RGB)
-			cas <true, 0> << <gridSize, blockSize, 0, stream >> > (texObj, sharpenStrength, contrastAdaption, casOutputBuffer, rows, cols);
-		else
-			cas <true, 1> << <gridSize, blockSize, 0, stream >> > (texObj, sharpenStrength, contrastAdaption, casOutputBuffer, rows, cols);
-		cudaStreamSynchronize(stream);
-		//copy from GPU to HOST
-		cudaMemcpyAsync(hostOutputBuffer, casOutputBuffer, rows * cols * sizeof(unsigned char) * 4, cudaMemcpyDeviceToHost, stream);
-	}
-	else 
-	{
-		//enqueue CAS kernel (No alpha channel output)
-		if (casMode == PLANAR_RGB)
-			cas <false, 0> << <gridSize, blockSize, 0, stream >> > (texObj, sharpenStrength, contrastAdaption, casOutputBuffer, rows, cols);
-		else
-			cas <false, 1> << <gridSize, blockSize, 0, stream >> > (texObj, sharpenStrength, contrastAdaption, casOutputBuffer, rows, cols);
-		cudaStreamSynchronize(stream);
-		//copy from GPU to HOST
-		cudaMemcpyAsync(hostOutputBuffer, casOutputBuffer, rows * cols * sizeof(unsigned char) * 3, cudaMemcpyDeviceToHost, stream);
-	}
+	//enqueue CAS kernel with Alpha channel output or not, or RGB planar or interleaved output based on param casMode
+	if (hasAlpha && casMode == PLANAR_RGB)
+		cas <true, PLANAR_RGB> << <gridSize, blockSize, 0, stream >> > (texObj, sharpenStrength, contrastAdaption, casOutputBuffer, rows, cols);
+	else if (hasAlpha && casMode == INTERLEAVED_RGBA)
+		cas <true, INTERLEAVED_RGBA> << <gridSize, blockSize, 0, stream >> > (texObj, sharpenStrength, contrastAdaption, casOutputBuffer, rows, cols);
+	else if (!hasAlpha && casMode == PLANAR_RGB)
+		cas <false, PLANAR_RGB> << <gridSize, blockSize, 0, stream >> > (texObj, sharpenStrength, contrastAdaption, casOutputBuffer, rows, cols);
+	else
+		cas <false, INTERLEAVED_RGBA> << <gridSize, blockSize, 0, stream >> > (texObj, sharpenStrength, contrastAdaption, casOutputBuffer, rows, cols);
+	cudaStreamSynchronize(stream);
+	//copy from GPU to HOST
+	cudaMemcpyAsync(hostOutputBuffer, casOutputBuffer, rows * cols * sizeof(unsigned char) * (hasAlpha ? 4 : 3), cudaMemcpyDeviceToHost, stream);
 	cudaStreamSynchronize(stream);
 	return hostOutputBuffer;
 }
