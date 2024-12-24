@@ -3,19 +3,16 @@
 #include "helper_math.h"
 
 //Main CAS kernel
+//Template: hasAlpha: whether the input image has an alpha channel
 //Input: texObj: input (sRGB) texture object
 //		 sharpenStrength: sharpening strength
 //		 contrastAdaption: contrast adaption
-//		 casOutputR: output R channel
-//		 casOutputG: output G channel
-//		 casOutputB: output B channel
-//		 casOutputRGB: output RGB interleaved
+//		 casOutput: output RGB(A) interleaved
 //		 height: height of the input texture
 //		 width: width of the input texture
-//		 casMode: 0 for RGB mode (write to casOutputR,G and B buffers), 1 for interleaved mode (write to casOutputRGB buffer)
 //Output: None
-template<const int casMode>
-__global__ void cas(cudaTextureObject_t texObj, const float sharpenStrength, const float contrastAdaption, unsigned char* casOutputR, unsigned char* casOutputG, unsigned char* casOutputB, uchar3* casOutputRGB, const unsigned int height, const unsigned int width)
+template <const bool hasAlpha>
+__global__ void cas(cudaTextureObject_t texObj, const float sharpenStrength, const float contrastAdaption, unsigned char* casOutput, const unsigned int height, const unsigned int width)
 {
 	const int x = blockIdx.x * blockDim.x + threadIdx.x;
 	const int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -28,11 +25,21 @@ __global__ void cas(cudaTextureObject_t texObj, const float sharpenStrength, con
 	//  a b c
 	//  d(e)f
 	//  g h i
+	const float4 currentPixel = tex3D<float4>(texObj, x, y, 0);
+	//speedup if alpha is zero -> just write the alpha value only and return
+	if constexpr (hasAlpha)
+	{
+		if (currentPixel.w == 0)
+		{
+			casOutput[4 * outputIndex + 3] = 0;
+			return;
+		}	
+	}
+	const float3 e = make_float3(currentPixel);
 	const float3 a = make_float3(tex3D<float4>(texObj, x - 1, y - 1, 0));
 	const float3 b = make_float3(tex3D<float4>(texObj, x, y - 1, 0));
 	const float3 c = make_float3(tex3D<float4>(texObj, x + 1, y - 1, 0));
 	const float3 d = make_float3(tex3D<float4>(texObj, x - 1, y, 0));
-	const float3 e = make_float3(tex3D<float4>(texObj, x, y, 0));
 	const float3 f = make_float3(tex3D<float4>(texObj, x + 1, y, 0));
 	const float3 g = make_float3(tex3D<float4>(texObj, x - 1, y + 1, 0));
 	const float3 h = make_float3(tex3D<float4>(texObj, x, y + 1, 0));
@@ -53,7 +60,7 @@ __global__ void cas(cudaTextureObject_t texObj, const float sharpenStrength, con
 
 	// Smooth minimum distance to signal limit divided by smooth max.
 	const float3 ampRGB = rsqrtf(saturate(fminf(mnRGB, 2.0f - mxRGB) * rcp(mxRGB)));
-	
+
 	// Shaping amount of sharpening.
 	const float3 wRGB = -rcp(ampRGB * (-3.0f * contrastAdaption + 8.0f));
 	const float3 rcpWeightRGB = rcp(4.0f * wRGB + 1.0f);
@@ -69,16 +76,18 @@ __global__ void cas(cudaTextureObject_t texObj, const float sharpenStrength, con
 	const unsigned char colorR = normalizedFloatToUchar(linearToSRGB(sharpenedValues.x));
 	const unsigned char colorG = normalizedFloatToUchar(linearToSRGB(sharpenedValues.y));
 	const unsigned char colorB = normalizedFloatToUchar(linearToSRGB(sharpenedValues.z));
-	//RGB mode, write to 3 channels separately
-	if constexpr (casMode == 0)
+	//interleaved mode, write RGB(A) consecutively (uncoalesced writes, low performance hit, may optimize)
+	if constexpr (hasAlpha)
 	{
-		casOutputR[outputIndex] = colorR;
-		casOutputG[outputIndex] = colorG;
-		casOutputB[outputIndex] = colorB;
+		casOutput[4 * outputIndex] = colorR;
+		casOutput[4 * outputIndex + 1] = colorG;
+		casOutput[4 * outputIndex + 2] = colorB;
+		casOutput[4 * outputIndex + 3] = normalizedFloatToUchar(currentPixel.w);
 	}
-	//interleaved mode, write RGB consecutively (uncoalesced writes, low performance hit, may optimize)
 	else
 	{
-		casOutputRGB[outputIndex] = make_uchar3(colorR, colorG, colorB);
-	}
+		casOutput[3 * outputIndex] = colorR;
+		casOutput[3 * outputIndex + 1] = colorG;
+		casOutput[3 * outputIndex + 2] = colorB;
+	}	
 }

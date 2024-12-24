@@ -5,61 +5,47 @@
 
 void CASImpl::initializeMemory(const unsigned int rows, const unsigned int cols)
 {
+	const int channels = hasAlpha ? 4 : 3;
 	//initialize CAS output buffers and pinned memory for output
-	cudaMallocAsync(&casOutputBufferRGB, sizeof(uchar3) * rows * cols, stream);
-	cudaMallocAsync(&casOutputBufferR, sizeof(unsigned char) * rows * cols, streamR);
-	cudaMallocAsync(&casOutputBufferG, sizeof(unsigned char) * rows * cols, streamG);
-	cudaMallocAsync(&casOutputBufferB, sizeof(unsigned char) * rows * cols, streamB);
-	cudaHostAlloc((void**)&hostOutputBuffer, sizeof(unsigned char) * rows * cols * 3, cudaHostAllocDefault);
-	cuda_utils::cudaStreamsSynchronize(stream,streamR, streamG, streamB);
+	cudaMallocAsync(&casOutputBuffer, sizeof(unsigned char) * channels * rows * cols, stream);
+	cudaHostAlloc((void**)&hostOutputBuffer, sizeof(unsigned char) * channels * rows * cols, cudaHostAllocDefault);
+	cuda_utils::cudaStreamsSynchronize(stream);
 	//initialize texture
-	auto textureData = cuda_utils::createTextureData(rows,cols);
+	auto textureData = cuda_utils::createTextureData(rows, cols);
 	texObj = textureData.first;
 	texArray = textureData.second;
 }
 
 //full constructor
-CASImpl::CASImpl(const unsigned int rows, const unsigned int cols) :
-	rows(rows), cols(cols)
+CASImpl::CASImpl(const bool hasAlpha, const unsigned int rows, const unsigned int cols) :
+	hasAlpha(hasAlpha), rows(rows), cols(cols)
 {
-	cuda_utils::cudaStreamsCreate(stream, streamR, streamG, streamB);
+	cuda_utils::cudaStreamsCreate(stream);
 	initializeMemory(rows, cols);
 }
 
 //copy constructor
 CASImpl::CASImpl(const CASImpl& other):
-	rows(other.rows), cols(other.rows)
+	hasAlpha(other.hasAlpha), rows(other.rows), cols(other.rows)
 {
-	cuda_utils::cudaStreamsCreate(stream, streamR, streamG, streamB);
+	cuda_utils::cudaStreamsCreate(stream);
 	initializeMemory(rows, cols);
 }
 
 //move constructor
 CASImpl::CASImpl(CASImpl&& other) noexcept :
-	rows(other.rows), cols(other.rows)
+	hasAlpha(other.hasAlpha), rows(other.rows), cols(other.rows)
 {
 	//move buffers and texture data and nullify other
-	casOutputBufferRGB = other.casOutputBufferRGB;
-	casOutputBufferR = other.casOutputBufferR;
-	casOutputBufferG = other.casOutputBufferG;
-	casOutputBufferB = other.casOutputBufferB;
+	casOutputBuffer = other.casOutputBuffer;
 	hostOutputBuffer = other.hostOutputBuffer;
 	texObj = other.texObj;
 	texArray = other.texArray;
 	stream = other.stream;
-	streamR = other.streamR;
-	streamG = other.streamG;
-	streamB = other.streamB;
-	other.casOutputBufferRGB = nullptr;
-	other.casOutputBufferR = nullptr;
-	other.casOutputBufferG = nullptr;
-	other.casOutputBufferB = nullptr;
+	other.casOutputBuffer = nullptr;
 	other.hostOutputBuffer = nullptr;
 	other.texObj = 0;
 	other.stream = nullptr;
-	other.streamR = nullptr;
-	other.streamG = nullptr;
-	other.streamB = nullptr;
 	other.texArray = nullptr;
 }
 
@@ -70,20 +56,15 @@ CASImpl& CASImpl::operator=(CASImpl&& other) noexcept
 	{
 		rows = other.rows;
 		cols = other.cols;
+		hasAlpha = other.hasAlpha;
 		//move pitched memory
 		cudaFreeHost(hostOutputBuffer);
 		hostOutputBuffer = other.hostOutputBuffer;
 		other.hostOutputBuffer = nullptr;
 		//move streams
-		cuda_utils::cudaStreamsDestroy(stream, streamR, streamG, streamB);
+		cuda_utils::cudaStreamsDestroy(stream);
 		stream = other.stream;
 		other.stream = nullptr;
-		streamR = other.streamR;
-		other.streamR = nullptr;
-		streamG = other.streamG;
-		other.streamG = nullptr;
-		streamB = other.streamB;
-		other.streamB = nullptr;
 		//move texture object
 		cudaDestroyTextureObject(texObj);
 		texObj = other.texObj;
@@ -103,6 +84,7 @@ CASImpl& CASImpl::operator=(const CASImpl& other)
 	{
 		rows = other.rows;
 		cols = other.cols;
+		hasAlpha = other.hasAlpha;
 		cudaFreeHost(hostOutputBuffer);
 		cudaDestroyTextureObject(texObj);
 		cudaFreeArray(texArray);
@@ -115,60 +97,54 @@ void CASImpl::destroyBuffers()
 {
 	static constexpr auto destroy = [](auto&& resource, auto&& deleter) { if (resource) deleter(resource); };
 	static constexpr auto destroyAsync = [](auto&& resource, auto&& stream, auto&& deleter) { if (resource) deleter(resource, stream); };
-	destroyAsync(casOutputBufferRGB, stream, cudaFreeAsync);
-	destroyAsync(casOutputBufferR, streamR, cudaFreeAsync);
-	destroyAsync(casOutputBufferG, streamG, cudaFreeAsync);
-	destroyAsync(casOutputBufferB, streamB, cudaFreeAsync);
-	cuda_utils::cudaStreamsSynchronize(stream, streamR, streamG, streamB);
+	destroyAsync(casOutputBuffer, stream, cudaFreeAsync);
 	destroy(texObj, cudaDestroyTextureObject);
 	destroy(texArray, cudaFreeArray);
 	destroy(hostOutputBuffer, cudaFreeHost);
+	cuda_utils::cudaStreamsSynchronize(stream);
 }
 
 //destructor, destroy everything
 CASImpl::~CASImpl()
 {
 	destroyBuffers();
-	cuda_utils::cudaStreamsDestroy(stream, streamR, streamG, streamB);
+	cuda_utils::cudaStreamsDestroy(stream);
 }
 
 //destory and re-initialize memory objects only
-void CASImpl::reinitializeMemory(const unsigned int rows, const unsigned int cols)
+void CASImpl::reinitializeMemory(const bool hasAlpha, const unsigned int rows, const unsigned int cols)
 {
 	this->rows = rows;
 	this->cols = cols;
+	this->hasAlpha = hasAlpha;
 	destroyBuffers();
 	initializeMemory(rows, cols);
 }
 
 //setup and call main CAS kernel, return sharpened image as unsigned char buffer (pinned memory of this CAS instance)
-//hostRgbPtr must be interleaved RGB data
-const unsigned char* CASImpl::sharpenImage(const unsigned char *hostRgbPtr, const CASMode casMode, const float sharpenStrength, const float contrastAdaption)
+//hostRgbPtr must be interleaved RGB(A) data
+const unsigned char* CASImpl::sharpenImage(const unsigned char *hostRgbPtr, const float sharpenStrength, const float contrastAdaption)
 {
 	const dim3 gridSize = cuda_utils::gridSizeCalculate(blockSize, rows, cols);
 	//copy input data to texture
 	cuda_utils::copyDataToCudaArrayAsync(hostRgbPtr, rows, cols, texArray, stream);
 	cudaStreamSynchronize(stream);
-
-	if (casMode == CASMode::CAS_RGB) 
+	if (hasAlpha) 
 	{
 		//enqueue CAS kernel
-		cas<CASMode::CAS_RGB> << <gridSize, blockSize, 0, stream >> > (texObj, sharpenStrength, contrastAdaption, casOutputBufferR, casOutputBufferG, casOutputBufferB, casOutputBufferRGB, rows, cols);
+		cas <true><< <gridSize, blockSize, 0, stream >> > (texObj, sharpenStrength, contrastAdaption, casOutputBuffer, rows, cols);
 		cudaStreamSynchronize(stream);
 		//copy from GPU to HOST
-		cudaMemcpyAsync(hostOutputBuffer, casOutputBufferR, rows * cols * sizeof(unsigned char), cudaMemcpyDeviceToHost, streamR);
-		cudaMemcpyAsync(hostOutputBuffer + (rows * cols), casOutputBufferG, rows * cols * sizeof(unsigned char), cudaMemcpyDeviceToHost, streamG);
-		cudaMemcpyAsync(hostOutputBuffer + (2 * (rows * cols)), casOutputBufferB, rows * cols * sizeof(unsigned char), cudaMemcpyDeviceToHost, streamB);
-		cuda_utils::cudaStreamsSynchronize(streamR, streamG, streamB);
+		cudaMemcpyAsync(hostOutputBuffer, casOutputBuffer, rows * cols * sizeof(unsigned char) * 4, cudaMemcpyDeviceToHost, stream);
 	}
 	else 
 	{
 		//enqueue CAS kernel
-		cas<CASMode::CAS_INTERLEAVED> << <gridSize, blockSize, 0, stream >> > (texObj, sharpenStrength, contrastAdaption, casOutputBufferR, casOutputBufferG, casOutputBufferB, casOutputBufferRGB, rows, cols);
+		cas <false><< <gridSize, blockSize, 0, stream >> > (texObj, sharpenStrength, contrastAdaption, casOutputBuffer, rows, cols);
 		cudaStreamSynchronize(stream);
 		//copy from GPU to HOST
-		cudaMemcpyAsync(hostOutputBuffer, casOutputBufferRGB, rows * cols * sizeof(uchar3), cudaMemcpyDeviceToHost, stream);
-		cudaStreamSynchronize(stream);
+		cudaMemcpyAsync(hostOutputBuffer, casOutputBuffer, rows * cols * sizeof(unsigned char) * 3, cudaMemcpyDeviceToHost, stream);
 	}
+	cudaStreamSynchronize(stream);
 	return hostOutputBuffer;
 }

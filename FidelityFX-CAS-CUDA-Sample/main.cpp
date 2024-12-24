@@ -50,14 +50,22 @@ int main()
 	CImg<unsigned char> diskImage(imagePath.c_str());
 	const int rows = diskImage.height();
 	const int cols = diskImage.width();
-	if (diskImage.spectrum() != 3)
+	const int channels = diskImage.spectrum();
+
+	//RGB, append empty alpha channel
+	if (diskImage.spectrum() == 3)
 	{
-		cout << "Image is not RGB\n";
+		// Add empty "A" channel (RGBA), CUDA cannot work with RGB input, padding is required
+		diskImage.append(CImg<unsigned char>(cols, rows, 1, 1, 255), 'c');
+	}
+	//if RGBA all good, if not -> exit
+	else if (diskImage.spectrum() != 4) 
+	{
+		cout << "Image is not valid\n";
 		exitProgram(EXIT_FAILURE);
 	}
-	// Add empty "A" channel (RGBA), CUDA cannot work with RGB, padding is required
-	diskImage.append(CImg<unsigned char>(cols, rows, 1, 1, 0), 'c');
-	//interleave data [R1, G1, B1, 0, R2, B2, G2, 0....]
+	
+	//interleave data [R1, G1, B1, A1, R2, G2, B2, A2....]
 	diskImage.permute_axes("cxyz");
 	timer::end();
 	totalExecutionTime += timer::elapsedSeconds();
@@ -84,24 +92,26 @@ int main()
 
 	//initialize CAS algorithm class and execute sharpening
 	timer::start();
-	void* cas = CAS_initialize(rows, cols);
+	void* cas = CAS_initialize(channels == 4, rows, cols);
 	timer::end();
 	totalExecutionTime += timer::elapsedSeconds();
 	cout << "Time to initialize CUDA memory: " << timer::elapsedSeconds() << " seconds\n\n";
 
-	//execute sharpening and instantiate CImg to use the pinned memory returned by CAS
+	//execute sharpening and instantiate CImg to copy internally the pinned memory returned by CAS
 	double copyAndKernelSecs = 0.0;
 	std::unique_ptr<CImg<unsigned char>> sharpImage;
 	for (int i = 0; i < loops; i++)
 	{
 		timer::start();
-		const unsigned char *sharpedRgbBuffer = CAS_sharpenImage(cas, diskImage.data(), 0, sharpenStrength, contrastAdaption);
-		sharpImage = std::make_unique<CImg<unsigned char>>(sharpedRgbBuffer, cols, rows, 1, 3, true);
+		const unsigned char *sharpedRgbBuffer = CAS_sharpenImage(cas, diskImage.data(), sharpenStrength, contrastAdaption);
+		sharpImage = std::make_unique<CImg<unsigned char>>(sharpedRgbBuffer, channels, cols, rows, 1, false);
+		//CImg works with planar data only, a simple permutation is required (a memcpy cannot be avoided here)
+		sharpImage->permute_axes("yzcx"); 
 		timer::end();
 		copyAndKernelSecs += timer::elapsedSeconds();
 	}
 	totalExecutionTime += copyAndKernelSecs / loops;
-	cout << "Image sharpening using CAS. Image size is " << rows << " rows and " << cols << " columns and parameters:\nSharpen Strength = " << sharpenStrength << "\nContrast Adaption = " <<contrastAdaption << "\n" << executionTime(showFps, copyAndKernelSecs / loops) << "\n\n";
+	cout << "Image sharpening (+ RAM->VRAM->RAM tranfer) using CAS. Image size is " << rows << " rows and " << cols << " columns and parameters:\nSharpen Strength = " << sharpenStrength << "\nContrast Adaption = " <<contrastAdaption << "\n" << executionTime(showFps, copyAndKernelSecs / loops) << "\n\n";
 	cout << "Total execution time: " << totalExecutionTime << " seconds\n";
 
 	//save watermarked images to disk
