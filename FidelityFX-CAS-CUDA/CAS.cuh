@@ -94,10 +94,18 @@ __global__ void cas(cudaTextureObject_t texObj, const float sharpenStrength, con
 	}
 	else
 	{
-		casOutput[4 * outputIndex] = colorR;
-		casOutput[4 * outputIndex + 1] = colorG;
-		casOutput[4 * outputIndex + 2] = colorB;
 		if constexpr (hasAlpha)
+		{
+			casOutput[4 * outputIndex] = colorR;
+			casOutput[4 * outputIndex + 1] = colorG;
+			casOutput[4 * outputIndex + 2] = colorB;
 			casOutput[4 * outputIndex + 3] = normalizedFloatToUchar(currentPixel.w);
+		}
+		else 
+		{
+			casOutput[3 * outputIndex] = colorR;
+			casOutput[3 * outputIndex + 1] = colorG;
+			casOutput[3 * outputIndex + 2] = colorB;
+		}
 	}
 }
