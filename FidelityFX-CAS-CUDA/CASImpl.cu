@@ -5,7 +5,7 @@
 #include <type_traits>
 
 //initialize buffers and texture data based on the provided image dimensions
-void CASImpl::initializeMemory(const unsigned int rows, const unsigned int cols)
+void CASImpl::initializeMemory()
 {
 	const int channels = hasAlpha ? 4 : 3;
 	//initialize CAS output buffers and pinned memory for output
@@ -23,7 +23,7 @@ CASImpl::CASImpl(const bool hasAlpha, const unsigned int rows, const unsigned in
 	hasAlpha(hasAlpha), rows(rows), cols(cols)
 {
 	cuda_utils::cudaStreamsCreate(stream);
-	initializeMemory(rows, cols);
+	initializeMemory();
 }
 
 //copy constructor
@@ -31,7 +31,7 @@ CASImpl::CASImpl(const CASImpl& other):
 	hasAlpha(other.hasAlpha), rows(other.rows), cols(other.rows)
 {
 	cuda_utils::cudaStreamsCreate(stream);
-	initializeMemory(rows, cols);
+	initializeMemory();
 }
 
 //helper method for moving data between CAS instances
@@ -107,7 +107,7 @@ void CASImpl::reinitializeMemory(const bool hasAlpha, const unsigned int rows, c
 	this->cols = cols;
 	this->hasAlpha = hasAlpha;
 	destroyBuffers();
-	initializeMemory(rows, cols);
+	initializeMemory();
 }
 
 //setup and call main CAS kernel, return sharpened image as unsigned char buffer (pinned memory of this CAS instance)
