@@ -57,7 +57,7 @@
       <PreprocessorDefinitions>WIN32;WIN64;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(ProjectDir)libs\CImg-3.4.3;$(ProjectDir)libs\zlib\include;$(ProjectDir)libs\inih;$(ProjectDir)libs\libpng\include;$(ProjectDir)libs\libjpeg\include;$(ProjectDir)../FidelityFX-CAS-CUDA/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)libs\CImg-3.5.0;$(ProjectDir)libs\zlib\include;$(ProjectDir)libs\inih;$(ProjectDir)libs\libpng\include;$(ProjectDir)libs\libjpeg\include;$(ProjectDir)../FidelityFX-CAS-CUDA/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -87,7 +87,7 @@ xcopy "$(ProjectDir)libs\libjpeg\bin\debug\jpeg62.dll" "$(SolutionDir)x64\Debug\
       <PreprocessorDefinitions>WIN32;WIN64;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(ProjectDir)libs\CImg-3.4.3;$(ProjectDir)libs\zlib\include;$(ProjectDir)libs\inih;$(ProjectDir)libs\libpng\include;$(ProjectDir)../FidelityFX-CAS-CUDA/include;$(ProjectDir)libs\libjpeg\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)libs\CImg-3.5.0;$(ProjectDir)libs\zlib\include;$(ProjectDir)libs\inih;$(ProjectDir)libs\libpng\include;$(ProjectDir)../FidelityFX-CAS-CUDA/include;$(ProjectDir)libs\libjpeg\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
