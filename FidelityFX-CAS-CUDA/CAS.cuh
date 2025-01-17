@@ -1,5 +1,6 @@
 #pragma once
 #include <cuda_runtime.h>
+#include <cuda_fp16.h>
 #include "helper_math.h"
 
 //Main CAS kernel
@@ -26,11 +27,11 @@ __global__ void cas(cudaTextureObject_t texObj, const float sharpenStrength, con
 	//  a b c
 	//  d(e)f
 	//  g h i
-	const float4 currentPixel = tex3D<float4>(texObj, x, y, 0);
+	const half4 currentPixel = make_half4(tex3D<float4>(texObj, x, y, 0));
 	//speedup if alpha is zero -> just write the alpha value only and return
 	if constexpr (hasAlpha)
 	{
-		if (currentPixel.w == 0)
+		if (__high2half(currentPixel.y) == __float2half(0.0f))
 		{
 			if constexpr (casMode == 0)
 				casOutput[width * height * 3 + outputIndex] = 0;
@@ -39,47 +40,47 @@ __global__ void cas(cudaTextureObject_t texObj, const float sharpenStrength, con
 			return;
 		}	
 	}
-	const float3 e = make_float3(currentPixel);
-	const float3 a = make_float3(tex3D<float4>(texObj, x - 1, y - 1, 0));
-	const float3 b = make_float3(tex3D<float4>(texObj, x, y - 1, 0));
-	const float3 c = make_float3(tex3D<float4>(texObj, x + 1, y - 1, 0));
-	const float3 d = make_float3(tex3D<float4>(texObj, x - 1, y, 0));
-	const float3 f = make_float3(tex3D<float4>(texObj, x + 1, y, 0));
-	const float3 g = make_float3(tex3D<float4>(texObj, x - 1, y + 1, 0));
-	const float3 h = make_float3(tex3D<float4>(texObj, x, y + 1, 0));
-	const float3 i = make_float3(tex3D<float4>(texObj, x + 1, y + 1, 0));
+	const half3 e = make_half3(currentPixel);
+	const half3 a = make_half3(tex3D<float4>(texObj, x - 1, y - 1, 0));
+	const half3 b = make_half3(tex3D<float4>(texObj, x, y - 1, 0));
+	const half3 c = make_half3(tex3D<float4>(texObj, x + 1, y - 1, 0));
+	const half3 d = make_half3(tex3D<float4>(texObj, x - 1, y, 0));
+	const half3 f = make_half3(tex3D<float4>(texObj, x + 1, y, 0));
+	const half3 g = make_half3(tex3D<float4>(texObj, x - 1, y + 1, 0));
+	const half3 h = make_half3(tex3D<float4>(texObj, x, y + 1, 0));
+	const half3 i = make_half3(tex3D<float4>(texObj, x + 1, y + 1, 0));
 
 	// Soft min and max.
 	//  a b c             b
 	//  d e f * 0.5  +  d e f * 0.5
 	//  g h i             h
 	// These are 2.0x bigger (factored out the extra multiply).
-	float3 mnRGB = fminf(fminf(fminf(d, e), fminf(f, b)), h);
-	const float3 mnRGB2 = fminf(mnRGB, fminf(fminf(a, c), fminf(g, i)));
+	half3 mnRGB = hmin3(hmin3(hmin3(d, e), hmin3(f, b)), h);
+	const half3 mnRGB2 = hmin3(mnRGB, hmin3(hmin3(a, c), hmin3(g, i)));
 	mnRGB += mnRGB2;
 
-	float3 mxRGB = fmaxf(fmaxf(fmaxf(d, e), fmaxf(f, b)), h);
-	const float3 mxRGB2 = fmaxf(mxRGB, fmaxf(fmaxf(a, c), fmaxf(g, i)));
+	half3 mxRGB = hmax3(hmax3(hmax3(d, e), hmax3(f, b)), h);
+	const half3 mxRGB2 = hmax3(mxRGB, hmax3(hmax3(a, c), hmax3(g, i)));
 	mxRGB += mxRGB2;
 
 	// Smooth minimum distance to signal limit divided by smooth max.
-	const float3 ampRGB = rsqrtf(saturate(fminf(mnRGB, 2.0f - mxRGB) * rcp(mxRGB)));
+	const half3 ampRGB = rsqrtf(saturate(hmin3(mnRGB, __float2half(2.0f) - mxRGB) * rcp(mxRGB)));
 
 	// Shaping amount of sharpening.
-	const float3 wRGB = -rcp(ampRGB * (-3.0f * contrastAdaption + 8.0f));
-	const float3 rcpWeightRGB = rcp(4.0f * wRGB + 1.0f);
+	const half3 wRGB = -rcp(ampRGB * (__float2half(-3.0f) * __float2half(contrastAdaption) + __float2half(8.0f)));
+	const half3 rcpWeightRGB = rcp(__float2half(4.0f) * wRGB + __float2half(1.0f));
 
 	//						  0 w 0
 	//  Filter shape:		  w 1 w
 	//						  0 w 0  
-	const float3 filterWindow = (b + d) + (f + h);
-	const float3 outColor = saturate((filterWindow * wRGB + e) * rcpWeightRGB);
-	const float3 sharpenedValues = fastLerp(e, outColor, sharpenStrength);
+	const half3 filterWindow = (b + d) + (f + h);
+	const half3 outColor = saturate((filterWindow * wRGB + e) * rcpWeightRGB);
+	const half3 sharpenedValues = fastLerp(e, outColor, __float2half(sharpenStrength));
 
 	//write to global memory
-	const unsigned char colorR = normalizedFloatToUchar(linearToSRGB(sharpenedValues.x));
-	const unsigned char colorG = normalizedFloatToUchar(linearToSRGB(sharpenedValues.y));
-	const unsigned char colorB = normalizedFloatToUchar(linearToSRGB(sharpenedValues.z));
+	const unsigned char colorR = normalizedHalfToUchar(linearToSRGB(__low2half(sharpenedValues.x)));
+	const unsigned char colorG = normalizedHalfToUchar(linearToSRGB(__high2half(sharpenedValues.x)));
+	const unsigned char colorB = normalizedHalfToUchar(linearToSRGB(sharpenedValues.y));
 	
 	//Write to global memory based on template params
 	//If hasAlpha is true, write the alpha channel as well
@@ -90,7 +91,7 @@ __global__ void cas(cudaTextureObject_t texObj, const float sharpenStrength, con
 		casOutput[width * height + outputIndex] = colorG;
 		casOutput[width * height * 2 + outputIndex] = colorB;
 		if constexpr (hasAlpha)
-			casOutput[width * height * 3 + outputIndex] = normalizedFloatToUchar(currentPixel.w);
+			casOutput[width * height * 3 + outputIndex] = normalizedHalfToUchar(__high2half(currentPixel.y));
 	}
 	else //write interleaved RGBA
 	{
@@ -99,6 +100,6 @@ __global__ void cas(cudaTextureObject_t texObj, const float sharpenStrength, con
 		casOutput[baseIndex + 1] = colorG;
 		casOutput[baseIndex + 2] = colorB;
 		if constexpr (hasAlpha)
-			casOutput[baseIndex + 3] = normalizedFloatToUchar(currentPixel.w);
+			casOutput[baseIndex + 3] = normalizedHalfToUchar(__high2half(currentPixel.y));
 	}
 }

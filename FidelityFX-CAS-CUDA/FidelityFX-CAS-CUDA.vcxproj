@@ -76,7 +76,7 @@
     </Link>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
-      <CodeGeneration>compute_52,sm_52;compute_86,sm_86</CodeGeneration>
+      <CodeGeneration>compute_75,sm_75; compute_86,sm_86</CodeGeneration>
       <AdditionalOptions>--std c++20 -diag-suppress 221 %(AdditionalOptions)</AdditionalOptions>
     </CudaCompile>
     <PostBuildEvent>
@@ -107,7 +107,7 @@
     </Link>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
-      <CodeGeneration>compute_52,sm_52;compute_86,sm_86</CodeGeneration>
+      <CodeGeneration>compute_75,sm_75; compute_86,sm_86</CodeGeneration>
       <AdditionalOptions>--std c++20 -diag-suppress 221 %(AdditionalOptions)</AdditionalOptions>
     </CudaCompile>
     <PostBuildEvent>
@@ -138,7 +138,7 @@
     </Link>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
-      <CodeGeneration>compute_52,sm_52;compute_86,sm_86</CodeGeneration>
+      <CodeGeneration>compute_75,sm_75; compute_86,sm_86</CodeGeneration>
       <AdditionalOptions>--std c++20 -diag-suppress 221 %(AdditionalOptions)</AdditionalOptions>
       <GenerateLineInfo>true</GenerateLineInfo>
     </CudaCompile>
