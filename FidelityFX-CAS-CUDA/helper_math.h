@@ -61,12 +61,12 @@ inline __device__ half powh(const half base, const half exp)
     return __float2half(__powf(__half2float(base), __half2float(exp)));
 }
 
-inline __device__ half3 rsqrtf(const half3 x)
+inline __device__ half3 h3rsqrtf(const half3 x)
 {
     return make_half3(h2rsqrt(x.x), hrsqrt(x.y));
 }
 
-inline __device__ half3 rcp(const half3 x)
+inline __device__ half3 h3rcp(const half3 x)
 {
     return make_half3(h2rcp(x.x), hrcp(x.y));
 }
@@ -83,17 +83,17 @@ inline __device__ half3 operator-(const half3 a)
 
 inline __device__ half3 operator-(const half b, const half3 a)
 {
-    return make_half3(__hsub2(__halves2half2(b, b),a.x), b - a.y);
+    return make_half3(__halves2half2(b, b) - a.x, b - a.y);
 }
 
 inline __device__ half3 operator+(const half3 a, const half b)
 {
-    return make_half3(__hadd2(__halves2half2(b, b), a.x), b + a.y);
+    return make_half3(__halves2half2(b, b) + a.x, b + a.y);
 }
 
 inline __device__ half3 operator+(const half3 a, const half3 b)
 {
-    return make_half3(__hadd2(a.x, b.x), a.y + b.y);
+    return make_half3(a.x + b.x, a.y + b.y);
 }
 
 inline __device__ void operator+=(half3& a, const half3 b)
@@ -109,12 +109,12 @@ inline __device__ half3 operator*(const half3 a, const half3 b)
 
 inline __device__ half3 operator*(const half a, const half3 b)
 {
-    return make_half3(__hmul2(b.x, __halves2half2(a, a)), b.y * a);
+    return make_half3(b.x * __halves2half2(a, a), b.y * a);
 }
 
 inline __device__ half3 operator*(const half3 a, const half b)
 {
-    return make_half3(__hmul2(a.x, __halves2half2(b, b)), a.y * b);
+    return make_half3(a.x * __halves2half2(b, b), a.y * b);
 }
 
 
@@ -122,30 +122,35 @@ inline __device__ half3 operator*(const half3 a, const half b)
 // Various utility functions
 ////////////////////////////////////////////////////////////////////////////////
 
-inline __device__ half clamp(const half f, const half a, const half b)
+inline __device__ half hclamp(const half f, const half a, const half b)
 {
     return __hmin(__hmax(f, a), b);
 }
 
-//clamp half3 values to [0,1]
-inline __device__ half3 saturate(const half3 x)
+inline __device__ half2 hclamp2(const half2 f, const half2 a, const half2 b)
 {
-    const half2 zero = half2 { __float2half(0.0f), __float2half(0.0f) };
-    const half2 one = half2 { __float2half(1.0f), __float2half(1.0f) };
-    return make_half3(__hmin2(__hmax2(x.x, zero), one), __hmin(__hmax(x.y, __low2half(zero)), __low2half(one)));
+    return __hmin2(__hmax2(f, a), b);
+}
+
+//clamp half3 values to [0,1]
+inline __device__ half3 saturateh(const half3 x)
+{
+    const half2 zero = half2 { CUDART_ZERO_FP16, CUDART_ZERO_FP16 };
+    const half2 one = half2 { CUDART_ONE_FP16, CUDART_ONE_FP16 };
+    return make_half3(hclamp2(x.x, zero, one), hclamp(x.y, CUDART_ZERO_FP16, CUDART_ONE_FP16));
 }
 
 //faster linear interpolation by using FMA operations
-inline __device__ half3 fastLerp(const half3 v0, const half3 v1, const half t)
+inline __device__ half3 lerph(const half3 v0, const half3 v1, const half t)
 {
     return make_half3(__hfma2(__halves2half2(t,t), v1.x, __hfma2(__halves2half2(-t, -t), v0.x, v0.x)), __hfma(t, v1.y, __hfma(-t, v0.y, v0.y)));
 }
 
 //converts a half in the range [0,1] to an unsigned char in the range [0,255]
-inline __device__ unsigned char normalizedHalfToUchar(const half value)
+inline __device__ unsigned char halfToUchar(const half value)
 {
-    half maxPixelValue = __float2half(255.0f);
-    return static_cast<unsigned char>(clamp(value * maxPixelValue, CUDART_ZERO_FP16, maxPixelValue));
+    const half maxPixelValue = __float2half(255.0f);
+    return static_cast<unsigned char>(hclamp(value * maxPixelValue, CUDART_ZERO_FP16, maxPixelValue));
 }
 
 //Convert a linear RGB value to sRGB value

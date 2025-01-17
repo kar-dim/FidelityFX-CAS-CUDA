@@ -64,23 +64,23 @@ __global__ void cas(cudaTextureObject_t texObj, const float sharpenStrength, con
 	mxRGB += mxRGB2;
 
 	// Smooth minimum distance to signal limit divided by smooth max.
-	const half3 ampRGB = rsqrtf(saturate(hmin3(mnRGB, __float2half(2.0f) - mxRGB) * rcp(mxRGB)));
+	const half3 ampRGB = h3rsqrtf(saturateh(hmin3(mnRGB, __float2half(2.0f) - mxRGB) * h3rcp(mxRGB)));
 
 	// Shaping amount of sharpening.
-	const half3 wRGB = -rcp(ampRGB * (__float2half(-3.0f) * __float2half(contrastAdaption) + __float2half(8.0f)));
-	const half3 rcpWeightRGB = rcp(__float2half(4.0f) * wRGB + __float2half(1.0f));
+	const half3 wRGB = -h3rcp(ampRGB * (__float2half(-3.0f) * __float2half(contrastAdaption) + __float2half(8.0f)));
+	const half3 rcpWeightRGB = h3rcp(__float2half(4.0f) * wRGB + __float2half(1.0f));
 
 	//						  0 w 0
 	//  Filter shape:		  w 1 w
 	//						  0 w 0  
 	const half3 filterWindow = (b + d) + (f + h);
-	const half3 outColor = saturate((filterWindow * wRGB + e) * rcpWeightRGB);
-	const half3 sharpenedValues = fastLerp(e, outColor, __float2half(sharpenStrength));
+	const half3 outColor = saturateh((filterWindow * wRGB + e) * rcpWeightRGB);
+	const half3 sharpenedValues = lerph(e, outColor, __float2half(sharpenStrength));
 
 	//write to global memory
-	const unsigned char colorR = normalizedHalfToUchar(linearToSRGB(__low2half(sharpenedValues.x)));
-	const unsigned char colorG = normalizedHalfToUchar(linearToSRGB(__high2half(sharpenedValues.x)));
-	const unsigned char colorB = normalizedHalfToUchar(linearToSRGB(sharpenedValues.y));
+	const unsigned char colorR = halfToUchar(linearToSRGB(__low2half(sharpenedValues.x)));
+	const unsigned char colorG = halfToUchar(linearToSRGB(__high2half(sharpenedValues.x)));
+	const unsigned char colorB = halfToUchar(linearToSRGB(sharpenedValues.y));
 	
 	//Write to global memory based on template params
 	//If hasAlpha is true, write the alpha channel as well
@@ -91,15 +91,15 @@ __global__ void cas(cudaTextureObject_t texObj, const float sharpenStrength, con
 		casOutput[width * height + outputIndex] = colorG;
 		casOutput[width * height * 2 + outputIndex] = colorB;
 		if constexpr (hasAlpha)
-			casOutput[width * height * 3 + outputIndex] = normalizedHalfToUchar(__high2half(currentPixel.y));
+			casOutput[width * height * 3 + outputIndex] = halfToUchar(__high2half(currentPixel.y));
 	}
 	else //write interleaved RGBA
 	{
 		const int baseIndex = (hasAlpha ? 4 : 3) * outputIndex; //ternary check will be optimized out
-		casOutput[baseIndex] = colorR;
+		casOutput[outputIndex] = colorR;
 		casOutput[baseIndex + 1] = colorG;
 		casOutput[baseIndex + 2] = colorB;
 		if constexpr (hasAlpha)
-			casOutput[baseIndex + 3] = normalizedHalfToUchar(__high2half(currentPixel.y));
+			casOutput[baseIndex + 3] = halfToUchar(__high2half(currentPixel.y));
 	}
 }
