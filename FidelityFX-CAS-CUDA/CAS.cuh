@@ -78,9 +78,9 @@ __global__ void cas(cudaTextureObject_t texObj, const float sharpenStrength, con
 	const half3 sharpenedValues = lerph(e, outColor, __float2half(sharpenStrength));
 
 	//write to global memory
-	const unsigned char colorR = halfToUchar(linearToSRGB(__low2half(sharpenedValues.x)));
-	const unsigned char colorG = halfToUchar(linearToSRGB(__high2half(sharpenedValues.x)));
-	const unsigned char colorB = halfToUchar(linearToSRGB(sharpenedValues.y));
+	const unsigned char colorR = halfToUchar(sRGB(__low2half(sharpenedValues.x)));
+	const unsigned char colorG = halfToUchar(sRGB(__high2half(sharpenedValues.x)));
+	const unsigned char colorB = halfToUchar(sRGB(sharpenedValues.y));
 	
 	//Write to global memory based on template params
 	//If hasAlpha is true, write the alpha channel as well

@@ -154,7 +154,7 @@ inline __device__ unsigned char halfToUchar(const half value)
 }
 
 //Convert a linear RGB value to sRGB value
-inline __device__ half linearToSRGB(const half linearColor)
+inline __device__ half sRGB(const half linearColor)
 {
     const half sRGBThreshold =     __float2half(0.0031308f);  // Threshold below which the linear scale applies
     const half sRGBScale =         __float2half(12.92f);          // Scale factor for the linear region
