@@ -41,13 +41,13 @@ __global__ void cas(cudaTextureObject_t texObj, const float sharpenStrength, con
 
 	// Load the corners of the padded region (only edge threads)
 	if (threadIdx.y == 0 && threadIdx.x == 0)
-		region[shX - 1][shY - 1] = make_half3(tex2D<float4>(texObj, x - 1, y - 1, 0));
+		region[shX - 1][shY - 1] = make_half3(tex3D<float4>(texObj, x - 1, y - 1, 0));
 	if (threadIdx.y == 15 && threadIdx.x == 15)
-		region[shX + 1][shY + 1] = make_half3(tex2D<float4>(texObj, x + 1, y + 1, 0));
+		region[shX + 1][shY + 1] = make_half3(tex3D<float4>(texObj, x + 1, y + 1, 0));
 	if (threadIdx.y == 0 && threadIdx.x == 15)
-		region[shX + 1][shY - 1] = make_half3(tex2D<float4>(texObj, x + 1, y - 1, 0));
+		region[shX + 1][shY - 1] = make_half3(tex3D<float4>(texObj, x + 1, y - 1, 0));
 	if (threadIdx.y == 15 && threadIdx.x == 0)
-		region[shX - 1][shY + 1] = make_half3(tex2D<float4>(texObj, x - 1, y + 1, 0));
+		region[shX - 1][shY + 1] = make_half3(tex3D<float4>(texObj, x - 1, y + 1, 0));
 
 	__syncthreads();
 
