@@ -5,7 +5,7 @@ VisualStudioVersion = 17.12.35521.163
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FidelityFX-CAS-CUDA", "FidelityFX-CAS-CUDA\FidelityFX-CAS-CUDA.vcxproj", "{B07DA219-FB43-432D-A0AA-43D7127E59CA}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FidelityFX-CAS-CUDA-Sample", "FidelityFX-CAS-CUDA-Sample\FidelityFX-CAS-CUDA-Sample.vcxproj", "{0E29BFD0-BA24-4007-B5EC-05F874A2F91A}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FidelityFX-CAS-CUDA-GUI", "FidelityFX-CAS-CUDA-GUI\FidelityFX-CAS-CUDA-GUI.vcxproj", "{77ECD4F7-FFEC-4F65-BBAD-4E4E90FF8F99}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,12 +20,12 @@ Global
 		{B07DA219-FB43-432D-A0AA-43D7127E59CA}.Release LineInfo|x64.Build.0 = Release LineInfo|x64
 		{B07DA219-FB43-432D-A0AA-43D7127E59CA}.Release|x64.ActiveCfg = Release|x64
 		{B07DA219-FB43-432D-A0AA-43D7127E59CA}.Release|x64.Build.0 = Release|x64
-		{0E29BFD0-BA24-4007-B5EC-05F874A2F91A}.Debug|x64.ActiveCfg = Debug|x64
-		{0E29BFD0-BA24-4007-B5EC-05F874A2F91A}.Debug|x64.Build.0 = Debug|x64
-		{0E29BFD0-BA24-4007-B5EC-05F874A2F91A}.Release LineInfo|x64.ActiveCfg = Release|x64
-		{0E29BFD0-BA24-4007-B5EC-05F874A2F91A}.Release LineInfo|x64.Build.0 = Release|x64
-		{0E29BFD0-BA24-4007-B5EC-05F874A2F91A}.Release|x64.ActiveCfg = Release|x64
-		{0E29BFD0-BA24-4007-B5EC-05F874A2F91A}.Release|x64.Build.0 = Release|x64
+		{77ECD4F7-FFEC-4F65-BBAD-4E4E90FF8F99}.Debug|x64.ActiveCfg = Debug|x64
+		{77ECD4F7-FFEC-4F65-BBAD-4E4E90FF8F99}.Debug|x64.Build.0 = Debug|x64
+		{77ECD4F7-FFEC-4F65-BBAD-4E4E90FF8F99}.Release LineInfo|x64.ActiveCfg = Release|x64
+		{77ECD4F7-FFEC-4F65-BBAD-4E4E90FF8F99}.Release LineInfo|x64.Build.0 = Release|x64
+		{77ECD4F7-FFEC-4F65-BBAD-4E4E90FF8F99}.Release|x64.ActiveCfg = Release|x64
+		{77ECD4F7-FFEC-4F65-BBAD-4E4E90FF8F99}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

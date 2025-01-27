@@ -96,7 +96,7 @@ __global__ void cas(cudaTextureObject_t texObj, const float sharpenStrength, con
 	else //write interleaved RGBA
 	{
 		const int baseIndex = (hasAlpha ? 4 : 3) * outputIndex; //ternary check will be optimized out
-		casOutput[outputIndex] = colorR;
+		casOutput[baseIndex] = colorR;
 		casOutput[baseIndex + 1] = colorG;
 		casOutput[baseIndex + 2] = colorB;
 		if constexpr (hasAlpha)
