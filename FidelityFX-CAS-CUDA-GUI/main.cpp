@@ -7,6 +7,7 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+    a.setWindowIcon(QIcon(":/assets/gpuopen.ico"));
 
     QFile styleFile(":/stylesheets/main.qss");
     styleFile.open(QFile::ReadOnly);
