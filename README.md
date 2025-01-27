@@ -20,16 +20,24 @@ This project implements CAS as a CUDA kernel. The main reasons for porting CAS t
 Τhis repository has two projects:
 
 1. **CAS Implementation**. The core functionality of CAS, implemented as a CUDA kernel. It is a DLL project, and defines a C-style interface for interacting with the DLL. Programs that will use CAS filtering, should have in the output directory the CAS ```.dll``` and ```.lib``` files, and also include the ```CASLibWrapper.h``` file to interact with the DLL.
-2. **Sample usage**. This project aims to showcase how to interact with the CAS DLL in order to sharpen images. We can parameterize the sample with the provided ```settings.ini``` file:
+2. **GUI Application**. This simple GUI project aims to showcase how to interact with the CAS DLL in order to sharpen images.
 
-## Sample Project settings.ini Parameters
+## Build
 
-| Parameter                         | Description                                                                                                                 |
-|-----------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
-| image                             | Path to the input image.                                                                                                    |
-| save_sharpened_file_to_disk       | Save the sharpened image to disk, in the same path as the original image, suffixed with "_CAS".                             |
-| execution_time_in_fps             | Show how much time it took to sharpen the image and transfer it back from VRAM to RAM in absolute time, or in FPS.          |
-| sharpen_strength                  | CAS Parameter. The main sharpening intensity, with values in the range [0,1].                                               |
-| contrast_adaption                 | CAS Parameter. Lower values reduce sharpening based on the local contrast, with values in the range [0,1].                  |
-| loops_for_test                    | Runs the sharpening pass multiple times and averages the time for the sharpening + copy from VRAM to RAM                    |
+The projects are included in a Visual Studio Solution (```.sln```).
+1. CAS DLL requires CUDA Toolkit (tested with version 12.6) in order to link with the CUDA libraries and to include the CUDA header files.
+2. The Qt GUI application requires Qt MSVC (tested with version 6.8.0) in order to use the Qt framework.
+3. When building for ```Release``` the tool ```windeployqt``` is called in order to package the required Qt libraries. Also, the DLL is copied in the GUI application's output folder.
 
+
+## GUI Application usage
+
+1. Launch the application.
+2. Use the **Open Image** from the File menu to select an image file from the system.
+3. Adjust parameters as desired through the user interface.
+4. The sharpening is applied in realtime each time a parameter is changed, to allow the user to view the updated image with various configurations.
+5. (Optional) Save the processed image using the **Save Image** from the File menu.
+
+## Prerequisites/Dependencies
+
+- **NVIDIA GPU**: An NVIDIA GPU is required in order to use the CAS DLL.
