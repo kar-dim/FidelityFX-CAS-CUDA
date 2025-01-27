@@ -18,7 +18,38 @@ __global__ void cas(cudaTextureObject_t texObj, const float sharpenStrength, con
 {
 	const int x = blockIdx.x * blockDim.x + threadIdx.x;
 	const int y = blockIdx.y * blockDim.y + threadIdx.y;
+	const int shX = threadIdx.x + 1;
+	const int shY = threadIdx.y + 1;
 	const int outputIndex = (y * width) + x;
+
+	__shared__ half3 region[16 + 2][16 + 2]; //hold the 18 x 18 region for this 16 x 16 block
+
+	//load current pixel value
+	const half4 currentPixel = make_half4(tex3D<float4>(texObj, x, y, 0));
+	const half3 e = make_half3(currentPixel);
+	region[shX][shY] = e;
+
+	// Load the padded regions (only edge threads)
+	if (threadIdx.y == 0)
+		region[shX][shY - 1] = make_half3(tex3D<float4>(texObj, x, y - 1, 0));
+	if (threadIdx.y == 15)
+		region[shX][shY + 1] = make_half3(tex3D<float4>(texObj, x, y + 1, 0));
+	if (threadIdx.x == 0)
+		region[shX - 1][shY] = make_half3(tex3D<float4>(texObj, x - 1, y, 0));
+	if (threadIdx.x == 15)
+		region[shX + 1][shY] = make_half3(tex3D<float4>(texObj, x + 1, y, 0));
+
+	// Load the corners of the padded region (only edge threads)
+	if (threadIdx.y == 0 && threadIdx.x == 0)
+		region[shX - 1][shY - 1] = make_half3(tex2D<float4>(texObj, x - 1, y - 1, 0));
+	if (threadIdx.y == 15 && threadIdx.x == 15)
+		region[shX + 1][shY + 1] = make_half3(tex2D<float4>(texObj, x + 1, y + 1, 0));
+	if (threadIdx.y == 0 && threadIdx.x == 15)
+		region[shX + 1][shY - 1] = make_half3(tex2D<float4>(texObj, x + 1, y - 1, 0));
+	if (threadIdx.y == 15 && threadIdx.x == 0)
+		region[shX - 1][shY + 1] = make_half3(tex2D<float4>(texObj, x - 1, y + 1, 0));
+
+	__syncthreads();
 
 	if (x >= width || y >= height)
 		return;
@@ -27,7 +58,6 @@ __global__ void cas(cudaTextureObject_t texObj, const float sharpenStrength, con
 	//  a b c
 	//  d(e)f
 	//  g h i
-	const half4 currentPixel = make_half4(tex3D<float4>(texObj, x, y, 0));
 	//speedup if alpha is zero -> just write the alpha value only and return
 	if constexpr (hasAlpha)
 	{
@@ -40,15 +70,14 @@ __global__ void cas(cudaTextureObject_t texObj, const float sharpenStrength, con
 			return;
 		}	
 	}
-	const half3 e = make_half3(currentPixel);
-	const half3 a = make_half3(tex3D<float4>(texObj, x - 1, y - 1, 0));
-	const half3 b = make_half3(tex3D<float4>(texObj, x, y - 1, 0));
-	const half3 c = make_half3(tex3D<float4>(texObj, x + 1, y - 1, 0));
-	const half3 d = make_half3(tex3D<float4>(texObj, x - 1, y, 0));
-	const half3 f = make_half3(tex3D<float4>(texObj, x + 1, y, 0));
-	const half3 g = make_half3(tex3D<float4>(texObj, x - 1, y + 1, 0));
-	const half3 h = make_half3(tex3D<float4>(texObj, x, y + 1, 0));
-	const half3 i = make_half3(tex3D<float4>(texObj, x + 1, y + 1, 0));
+	const half3 a = region[shX - 1][shY - 1];
+	const half3 b = region[shX][shY - 1];
+	const half3 c = region[shX + 1][shY - 1];
+	const half3 d = region[shX - 1][shY];
+	const half3 f = region[shX + 1][shY];
+	const half3 g = region[shX - 1][shY + 1];
+	const half3 h = region[shX][shY + 1];
+	const half3 i = region[shX + 1][shY + 1];
 
 	// Soft min and max.
 	//  a b c             b
