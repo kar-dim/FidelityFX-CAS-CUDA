@@ -27,7 +27,7 @@ This project implements CAS as a CUDA kernel. The main reasons for porting CAS t
 The projects are included in a Visual Studio Solution (```.sln```).
 1. CAS DLL requires CUDA Toolkit (tested with version 12.6) in order to link with the CUDA libraries and to include the CUDA header files.
 2. The Qt GUI application requires Qt MSVC (tested with version 6.8.0) in order to use the Qt framework.
-3. When building for ```Release``` the tool ```windeployqt``` is called in order to package the required Qt libraries. Also, the DLL is copied in the GUI application's output folder.
+3. When building the GUI project, the tool ```windeployqt``` is called in order to copy the required Qt dependencies for running the application. Also, the DLL is copied in the GUI application's output folder.
 
 
 ## GUI Application usage
