@@ -11,10 +11,9 @@ enum CASMode
 class CASImpl
 {
 private:
-	cudaStream_t stream;
 	cudaTextureObject_t texObj;
 	cudaArray* texArray;
-	unsigned char *casOutputBuffer;
+	unsigned char* casOutputBuffer;
 	unsigned char* hostOutputBuffer;
 	bool hasAlpha;
 	unsigned int rows, cols;
@@ -22,14 +21,17 @@ private:
 
 	void initializeMemory();
 	void destroyBuffers();
-	void moveData(CASImpl&& other) noexcept;
+
 public:
-	CASImpl(const bool hasAlpha, const unsigned int rows, const unsigned int cols);
-	CASImpl(const CASImpl& other);
-	CASImpl(CASImpl&& other) noexcept;
-	CASImpl& operator=(CASImpl&& other) noexcept;
-	CASImpl& operator=(const CASImpl& other);
+	CASImpl();
 	~CASImpl();
-	void reinitializeMemory(const bool hasAlpha, const unsigned int rows, const unsigned int cols);
-	const unsigned char* sharpenImage(const unsigned char* inputImage, const int casMode, const float sharpenStrength, const float contrastAdaption);
+
+	//delete move/copy ctors/operators, not useful for a DLL class
+	CASImpl(const CASImpl& other) = delete;
+	CASImpl(CASImpl&& other) noexcept = delete;
+	CASImpl& operator=(CASImpl&& other) noexcept = delete;
+	CASImpl& operator=(const CASImpl& other) = delete;
+
+	void reinitializeMemory(const bool hasAlpha, const unsigned char* hostRgbPtr, const unsigned int rows, const unsigned int cols);
+	const unsigned char* sharpenImage(const int casMode, const float sharpenStrength, const float contrastAdaption);
 };

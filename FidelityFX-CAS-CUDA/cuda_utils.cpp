@@ -78,7 +78,7 @@ namespace cuda_utils
     }
 
     //copy Host data to Device Array
-    void copyDataToCudaArrayAsync(const unsigned char *data, const unsigned int rows, const unsigned int cols, cudaArray* cuArray, cudaStream_t stream)
+    void copyDataToCudaArray(const unsigned char *data, const unsigned int rows, const unsigned int cols, cudaArray* cuArray)
     {
         cudaMemcpy3DParms copyParams = { 0 };
         copyParams.kind = cudaMemcpyHostToDevice;
@@ -86,6 +86,6 @@ namespace cuda_utils
         // Interleaved data in packed [r, g, b, 0, r, g, b, 0...] format
         copyParams.srcPtr = make_cudaPitchedPtr((void*)data, cols * 4 * sizeof(unsigned char), cols, rows);
         copyParams.extent = make_cudaExtent(cols, rows, 1); // Depth is 1 because all channels are interleaved per pixel
-        cudaMemcpy3DAsync(&copyParams, stream);
+        cudaMemcpy3D(&copyParams);
     }
 }

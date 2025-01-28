@@ -22,7 +22,7 @@ MainWindow::MainWindow(QWidget *parent) :
     imageView(new QLabel),
     sharpenStrengthLabel(new QLabel("Sharpen Strength")),
     contrastAdaptionLabel(new QLabel("Contrast Adaption")),
-    casObj(CAS_initialize(0,5,5)),
+    casObj(CAS_initialize()),
     // 80% of the screen size
     targetImageSize(QGuiApplication::primaryScreen()->availableGeometry().size() * 0.8)
 {
@@ -119,8 +119,8 @@ void MainWindow::openImage()
         //convert to RGBA interleaved format
         originalImageAlpha = originalImage.hasAlphaChannel();
         originalImage = originalImage.convertToFormat(QImage::Format_RGBA8888);
-        //reinitialize CAS memory
-        CAS_reinitialize(casObj, originalImageAlpha, originalImage.height(), originalImage.width());
+        //suppply image to re-initialize internal CAS memory
+        CAS_supplyImage(casObj, originalImage.constBits(), originalImageAlpha, originalImage.height(), originalImage.width());
 
         // Only scale down if the image is larger than the target size
         updateImageView(originalImage);
@@ -159,7 +159,7 @@ void MainWindow::sliderValueChanged()
     //apply CAS CUDA from DLL and update UI
     const int sharpenedImageChannels = originalImageAlpha ? 4 : 3;
     const auto sharpenedImageFormat = originalImageAlpha ? QImage::Format_RGBA8888 : QImage::Format_RGB888;
-    const uchar* casData = CAS_sharpenImage(casObj, 1, originalImage.constBits(), CLAMP(sharpenStrength->value()), CLAMP(contrastAdaption->value()));
+    const uchar* casData = CAS_sharpenImage(casObj, 1, CLAMP(sharpenStrength->value()), CLAMP(contrastAdaption->value()));
     sharpenedImage = QImage(casData, originalImage.width(), originalImage.height(), originalImage.width() * sharpenedImageChannels, sharpenedImageFormat);
     updateImageView(sharpenedImage);
 
