@@ -1,10 +1,13 @@
 #ifndef WIDGET_UTILS_HPP
 #define WIDGET_UTILS_HPP
 
+#include <concepts>
 #include <QPixmap>
+#include <QSize>
 #include <QWidget>
-//#include <concepts> //c++20 is broken in Qt for now
+#include <type_traits>
 
+//Utility class for common widget operations
 class WidgetUtils final
 {
 public:
@@ -14,9 +17,12 @@ public:
     WidgetUtils(WidgetUtils&&) = delete;
     WidgetUtils& operator=(WidgetUtils&&) = delete;
 
+	//Scale the pixmap to the target size
     static void scalePixmap(QPixmap &pixmap, const QSize targetImageSize);
+
+	//Generic method to set visibility of multiple widgets
     template <typename... Widgets>
-    //requires (std::same_as<Widgets, QWidget> && ...)
+    requires (std::derived_from<std::remove_pointer_t<Widgets>, QWidget> && ...)
     static void setVisibility(bool value, Widgets... widgets)
     {
         (widgets->setVisible(value), ...);

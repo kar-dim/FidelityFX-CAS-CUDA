@@ -1,5 +1,7 @@
 #include "widget_utils.hpp"
-
+#include <QPixmap>
+#include <QSize>
+#include <Qt>
 void WidgetUtils::scalePixmap(QPixmap &pixmap, const QSize targetImageSize)
 {
     // Only scale down if the image is larger than the target size
