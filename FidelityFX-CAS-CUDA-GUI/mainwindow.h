@@ -1,11 +1,15 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QAction>
 #include <QImage>
 #include <QLabel>
 #include <QMainWindow>
+#include <QSize>
 #include <QSlider>
+#include <QString>
 #include <QVBoxLayout>
+#include <QWidget>
 
 
 class MainWindow : public QMainWindow {
@@ -23,7 +27,7 @@ private slots:
 private:
     const QString imageDialogFilterText { "Images (*.png *.jpg *.bmp *.webp *.tiff)" };
     void setupMenu();
-    void setupSlider(QSlider *slider, QLabel *label, const int value);
+    void setupSlider(QSlider *slider, QLabel *label, const int value) const;
     void setupImageView();
     void setupMainWidget();
     void addSliderLayout(QVBoxLayout *mainLayout, QSlider *slider, QLabel *label);

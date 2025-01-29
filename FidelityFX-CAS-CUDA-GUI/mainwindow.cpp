@@ -2,17 +2,23 @@
 #include "mainwindow.h"
 #include "widget_utils.hpp"
 #include <QFileDialog>
+#include <QFileDialog>
+#include <QGuiApplication>
 #include <QHBoxLayout>
 #include <QImage>
 #include <QImageReader>
 #include <QLabel>
 #include <QMainWindow>
+#include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QPixmap>
 #include <QScreen>
 #include <QSlider>
+#include <QString>
+#include <QtMinMax>
 #include <QVBoxLayout>
+#include <QWidget>
 
 #define CLAMP(x) qBound(0.0f, x/100.0f, 1.0f)
 
@@ -45,7 +51,7 @@ MainWindow::~MainWindow()
 }
 
 //setup CAS parameter sliders
-void MainWindow::setupSlider(QSlider *slider, QLabel *label, const int value)
+void MainWindow::setupSlider(QSlider *slider, QLabel *label, const int value) const
 {
     //Setup slider properties (QSlider and correspinding QLabel)
     slider->setRange(0, 100);
