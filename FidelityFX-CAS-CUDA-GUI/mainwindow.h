@@ -33,13 +33,13 @@ private:
     void addSliderLayout(QVBoxLayout *mainLayout, QSlider *slider, QLabel *label);
     void updateImageView(const QImage& image);
 
-    QImage originalImage, sharpenedImage;
+    QImage userImage, sharpenedImage;
     QSlider *sharpenStrength, *contrastAdaption;
     QLabel *imageView, *sharpenStrengthLabel, *contrastAdaptionLabel;
     void* casObj;
     QAction *openImageAction, *saveImageAction;
     const QSize targetImageSize;
-    bool originalImageAlpha;
+    bool userImageHasAlpha;
 };
 
 #endif // MAINWINDOW_H

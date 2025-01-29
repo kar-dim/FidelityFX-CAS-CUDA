@@ -19,6 +19,7 @@
 #include <QtMinMax>
 #include <QVBoxLayout>
 #include <QWidget>
+#include <type_traits>
 
 #define CLAMP(x) qBound(0.0f, x/100.0f, 1.0f)
 
@@ -119,28 +120,32 @@ void MainWindow::openImage()
         return;
     QImageReader reader(fileName);
     reader.setAutoTransform(true);
-    originalImage = reader.read();
+    QImage readerImage = reader.read();
+    if (readerImage.isNull())
+	{
+		QMessageBox::critical(this, "Open Image", "Failed to open the image.");
+		return;
+	}
 
-    if (!originalImage.isNull())
-    {
-        //convert to RGBA interleaved format
-        originalImageAlpha = originalImage.hasAlphaChannel();
-        originalImage = originalImage.convertToFormat(QImage::Format_RGBA8888);
-        //suppply image to re-initialize internal CAS memory
-        CAS_supplyImage(casObj, originalImage.constBits(), originalImageAlpha, originalImage.height(), originalImage.width());
+	userImage = std::move(readerImage);
+    //convert to RGBA interleaved format
+    userImageHasAlpha = userImage.hasAlphaChannel();
+    userImage = userImage.convertToFormat(QImage::Format_RGBA8888);
+    //suppply image to re-initialize internal CAS memory
+    CAS_supplyImage(casObj, userImage.constBits(), userImageHasAlpha, userImage.height(), userImage.width());
 
-        // Only scale down if the image is larger than the target size
-        updateImageView(originalImage);
-        WidgetUtils::setVisibility(true, imageView, sharpenStrength, contrastAdaption, sharpenStrengthLabel, contrastAdaptionLabel);
-        saveImageAction->setEnabled(true);
+    // Only scale down if the image is larger than the target size
+    updateImageView(userImage);
+    WidgetUtils::setVisibility(true, imageView, sharpenStrength, contrastAdaption, sharpenStrengthLabel, contrastAdaptionLabel);
+    saveImageAction->setEnabled(true);
 
-        // Resize the window to fit the image and sliders
-        adjustSize();
+    // Resize the window to fit the image and sliders
+    adjustSize();
 
-        //reset sliders
-        sharpenStrength->setValue(0);
-        contrastAdaption->setValue(100);
-    }
+    //reset sliders
+    sharpenStrength->setValue(0);
+    contrastAdaption->setValue(100);
+    
 }
 
 //Attempt to save the sharpened image
@@ -151,7 +156,7 @@ void MainWindow::saveImage()
         return;
 
     if (!sharpenedImage.save(fileName))
-        QMessageBox::warning(this, "Save Image", "Failed to save the image.");
+        QMessageBox::critical(this, "Save Image", "Failed to save the image.");
     else
         QMessageBox::information(this, "Save Image", "Image saved successfully.");
 }
@@ -159,15 +164,15 @@ void MainWindow::saveImage()
 //event handler when a Slider is changed, triggers the CAS sharpening to occur and the display to show the new image
 void MainWindow::sliderValueChanged()
 {
-    //don't calculate it parameters are (very close to) 0
+    //don't calculate if parameters are (very close to) 0
     if (sharpenStrength->value() <= 0.001 || contrastAdaption->value() <= 0.001)
         return;
 
     //apply CAS CUDA from DLL and update UI
-    const int sharpenedImageChannels = originalImageAlpha ? 4 : 3;
-    const auto sharpenedImageFormat = originalImageAlpha ? QImage::Format_RGBA8888 : QImage::Format_RGB888;
+    const int sharpenedImageChannels = userImageHasAlpha ? 4 : 3;
+    const auto sharpenedImageFormat = userImageHasAlpha ? QImage::Format_RGBA8888 : QImage::Format_RGB888;
     const uchar* casData = CAS_sharpenImage(casObj, 1, CLAMP(sharpenStrength->value()), CLAMP(contrastAdaption->value()));
-    sharpenedImage = QImage(casData, originalImage.width(), originalImage.height(), originalImage.width() * sharpenedImageChannels, sharpenedImageFormat);
+    sharpenedImage = QImage(casData, userImage.width(), userImage.height(), userImage.width() * sharpenedImageChannels, sharpenedImageFormat);
     updateImageView(sharpenedImage);
 
 }
