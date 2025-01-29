@@ -1,17 +1,18 @@
+#include "..\FidelityFX-CAS-CUDA\include\CASLibWrapper.h"
 #include "mainwindow.h"
-#include <QMainWindow>
-#include <QSlider>
-#include <QLabel>
+#include "widget_utils.hpp"
+#include <QFileDialog>
+#include <QHBoxLayout>
 #include <QImage>
-#include <QVBoxLayout>
+#include <QImageReader>
+#include <QLabel>
+#include <QMainWindow>
 #include <QMenuBar>
 #include <QMessageBox>
-#include <QFileDialog>
-#include <QScreen>
 #include <QPixmap>
-#include <QImageReader>
-#include "..\FidelityFX-CAS-CUDA\include\CASLibWrapper.h"
-#include "widget_utils.hpp"
+#include <QScreen>
+#include <QSlider>
+#include <QVBoxLayout>
 
 #define CLAMP(x) qBound(0.0f, x/100.0f, 1.0f)
 

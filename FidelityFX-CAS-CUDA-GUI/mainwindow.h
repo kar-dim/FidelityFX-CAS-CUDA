@@ -1,12 +1,12 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QImage>
+#include <QLabel>
 #include <QMainWindow>
 #include <QSlider>
-#include <QLabel>
-#include <QImage>
 #include <QVBoxLayout>
-#include "..\FidelityFX-CAS-CUDA\include\CASLibWrapper.h"
+
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
