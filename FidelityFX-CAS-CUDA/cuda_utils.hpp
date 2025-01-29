@@ -1,5 +1,4 @@
 #pragma once
-#include <concepts>
 #include <cuda_runtime.h>
 #include <utility>
 
@@ -11,26 +10,6 @@ namespace cuda_utils
     cudaResourceDesc createResourceDescriptor(cudaArray* cuArray);
     cudaTextureDesc createTextureDescriptor();
     cudaTextureObject_t createTextureObject(const cudaResourceDesc& pResDesc, const cudaTextureDesc& pTexDesc);
-    cudaDeviceProp getDeviceProperties();
     std::pair<cudaTextureObject_t, cudaArray*> createTextureData(const unsigned int rows, const unsigned int cols);
     void copyDataToCudaArray(const unsigned char* data, const unsigned int rows, const unsigned int cols, cudaArray* cuArray);
-    
-    template<typename...streams>
-    requires (std::same_as<streams, cudaStream_t> && ...)
-    void cudaStreamsSynchronize(streams...args) 
-    {
-        (cudaStreamSynchronize(args), ...);
-    }
-    template<typename...streams>
-    requires (std::same_as<streams, cudaStream_t> && ...)
-    void cudaStreamsCreate(streams&...args)
-    {
-        (cudaStreamCreate(&args), ...);
-    }
-    template<typename...streams>
-    requires (std::same_as<streams, cudaStream_t> && ...)
-    void cudaStreamsDestroy(streams...args)
-    {
-        (cudaStreamDestroy(args), ...);
-    }
 }

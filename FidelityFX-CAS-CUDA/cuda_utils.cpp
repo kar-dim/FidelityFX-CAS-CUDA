@@ -57,16 +57,6 @@ namespace cuda_utils
         return texObj;
     }
 
-    //get a cudaDeviceProp handle to query for various device information
-    cudaDeviceProp getDeviceProperties()
-    {
-        int device;
-        cudaGetDevice(&device);
-        cudaDeviceProp properties;
-        cudaGetDeviceProperties(&properties, device);
-        return properties;
-    }
-
     //create the cudaArray and the textureObject binded to this array.
     std::pair<cudaTextureObject_t, cudaArray*> createTextureData(const unsigned int rows, const unsigned int cols)
     {
