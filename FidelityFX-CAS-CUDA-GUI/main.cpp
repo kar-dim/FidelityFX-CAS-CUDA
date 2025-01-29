@@ -3,6 +3,9 @@
 #include <QApplication>
 #include <QFile>
 #include <QFontDatabase>
+#include <QIcon>
+#include <QSize>
+#include <QString>
 
 int main(int argc, char *argv[])
 {
