@@ -13,8 +13,8 @@
 //		 height: height of the input texture
 //		 width: width of the input texture
 //Output: None
-template <const bool hasAlpha, const int casMode>
-__global__ void cas(cudaTextureObject_t texObj, const float sharpenStrength, const float contrastAdaption, unsigned char* casOutput, const unsigned int height, const unsigned int width)
+template <class T, const bool hasAlpha, const int casMode>
+__global__ void cas(cudaTextureObject_t texObj, const float sharpenStrength, const float contrastAdaption, T* casOutput, const unsigned int height, const unsigned int width)
 {
 	const int x = blockIdx.x * blockDim.x + threadIdx.x;
 	const int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -36,7 +36,7 @@ __global__ void cas(cudaTextureObject_t texObj, const float sharpenStrength, con
 			if constexpr (casMode == 0)
 				casOutput[width * height * 3 + outputIndex] = 0;
 			else
-				casOutput[4 * outputIndex + 3] = 0;
+				casOutput[outputIndex] = make_uchar4(0, 0, 0, 0);
 			return;
 		}	
 	}
@@ -95,11 +95,11 @@ __global__ void cas(cudaTextureObject_t texObj, const float sharpenStrength, con
 	}
 	else //write interleaved RGBA
 	{
-		const int baseIndex = (hasAlpha ? 4 : 3) * outputIndex; //ternary check will be optimized out
-		casOutput[baseIndex] = colorR;
-		casOutput[baseIndex + 1] = colorG;
-		casOutput[baseIndex + 2] = colorB;
-		if constexpr (hasAlpha)
-			casOutput[baseIndex + 3] = halfToUchar(__high2half(currentPixel.y));
+		if constexpr (hasAlpha) {
+			casOutput[outputIndex] = make_uchar4(colorR, colorG, colorB, halfToUchar(__high2half(currentPixel.y)));
+		} else
+		{
+			casOutput[outputIndex] = make_uchar3(colorR, colorG, colorB);
+		}
 	}
 }

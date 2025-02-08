@@ -13,7 +13,7 @@ class CASImpl
 private:
 	cudaTextureObject_t texObj;
 	cudaArray* texArray;
-	unsigned char* casOutputBuffer;
+	void* casOutputBuffer;
 	unsigned char* hostOutputBuffer;
 	bool hasAlpha;
 	unsigned int rows, cols;

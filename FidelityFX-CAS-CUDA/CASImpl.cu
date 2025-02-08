@@ -16,10 +16,10 @@ CASImpl::~CASImpl()
 //initialize buffers and texture data based on the provided image dimensions
 void CASImpl::initializeMemory()
 {
-	const int channels = hasAlpha ? 4 : 3;
+	const auto bytesPerElement = hasAlpha ? sizeof(uchar4) : sizeof(unsigned char) * 3;
 	//initialize CAS output buffers and pinned memory for output
-	cudaMalloc(&casOutputBuffer, sizeof(unsigned char) * channels * rows * cols);
-	cudaHostAlloc((void**)&hostOutputBuffer, sizeof(unsigned char) * channels * rows * cols, cudaHostAllocDefault);
+	cudaMalloc(&casOutputBuffer, bytesPerElement * rows * cols);
+	cudaHostAlloc(&hostOutputBuffer, sizeof(unsigned char) * (hasAlpha ? 4 : 3) * rows * cols, cudaHostAllocDefault);
 	//initialize texture
 	auto textureData = cuda_utils::createTextureData(rows, cols);
 	texObj = textureData.first;
@@ -54,13 +54,13 @@ const unsigned char* CASImpl::sharpenImage(const int casMode, const float sharpe
 	const dim3 gridSize = cuda_utils::gridSizeCalculate(blockSize, rows, cols);
 	//enqueue CAS kernel with Alpha channel output or not, or RGB planar or interleaved output based on param casMode
 	if (hasAlpha && casMode == PLANAR_RGB)
-		cas <true, PLANAR_RGB> << <gridSize, blockSize >> > (texObj, sharpenStrength, contrastAdaption, casOutputBuffer, rows, cols);
+		cas <unsigned char, true, PLANAR_RGB> << <gridSize, blockSize >> > (texObj, sharpenStrength, contrastAdaption, reinterpret_cast<unsigned char*>(casOutputBuffer), rows, cols);
 	else if (hasAlpha && casMode == INTERLEAVED_RGBA)
-		cas <true, INTERLEAVED_RGBA> << <gridSize, blockSize >> > (texObj, sharpenStrength, contrastAdaption, casOutputBuffer, rows, cols);
+		cas <uchar4, true, INTERLEAVED_RGBA> << <gridSize, blockSize >> > (texObj, sharpenStrength, contrastAdaption, reinterpret_cast<uchar4*>(casOutputBuffer), rows, cols);
 	else if (!hasAlpha && casMode == PLANAR_RGB)
-		cas <false, PLANAR_RGB> << <gridSize, blockSize >> > (texObj, sharpenStrength, contrastAdaption, casOutputBuffer, rows, cols);
+		cas <unsigned char, false, PLANAR_RGB> << <gridSize, blockSize >> > (texObj, sharpenStrength, contrastAdaption, reinterpret_cast<unsigned char*>(casOutputBuffer), rows, cols);
 	else
-		cas <false, INTERLEAVED_RGBA> << <gridSize, blockSize >> > (texObj, sharpenStrength, contrastAdaption, casOutputBuffer, rows, cols);
+		cas <uchar3, false, INTERLEAVED_RGBA> << <gridSize, blockSize >> > (texObj, sharpenStrength, contrastAdaption, reinterpret_cast<uchar3*>(casOutputBuffer), rows, cols);
 
 	//copy from GPU to HOST
 	cudaMemcpy(hostOutputBuffer, casOutputBuffer, rows * cols * sizeof(unsigned char) * (hasAlpha ? 4 : 3), cudaMemcpyDeviceToHost);
