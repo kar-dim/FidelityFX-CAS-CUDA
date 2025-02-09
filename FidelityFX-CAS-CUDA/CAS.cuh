@@ -3,8 +3,8 @@
 #include <cuda_fp16.h>
 #include "helper_math.h"
 
-#define PLANAR_RGB 0
-#define INTERLEAVED_RGBA 1
+#define RGB 0
+#define RGBA 1
 
 //Main CAS kernel
 //Template: hasAlpha: whether the input image has an alpha channel
@@ -36,7 +36,7 @@ __global__ void cas(cudaTextureObject_t texObj, const float sharpenStrength, con
 	{
 		if (__high2half(currentPixel.y) == __float2half(0.0f))
 		{
-			if constexpr (casMode == PLANAR_RGB)
+			if constexpr (casMode == RGB)
 				casOutput[width * height * 3 + outputIndex] = 0;
 			else
 				casOutput[outputIndex] = make_uchar4(0, 0, 0, 0);
@@ -88,7 +88,7 @@ __global__ void cas(cudaTextureObject_t texObj, const float sharpenStrength, con
 	//Write to global memory based on template params
 	//If hasAlpha is true, write the alpha channel as well
 	//if casMode == 0 -> write planar RGB (slower, strided writes)
-	if constexpr (casMode == PLANAR_RGB)
+	if constexpr (casMode == RGB)
 	{
 		casOutput[outputIndex] = colorR;
 		casOutput[width * height + outputIndex] = colorG;

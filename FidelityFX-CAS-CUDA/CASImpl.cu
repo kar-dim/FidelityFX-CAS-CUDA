@@ -1,5 +1,5 @@
-﻿#include "CAS.cuh"
-#include "CASImpl.cuh"
+﻿#include "CASImpl.cuh"
+#include "CAS.cuh"
 #include "cuda_utils.hpp"
 #include <cuda_runtime.h>
 
