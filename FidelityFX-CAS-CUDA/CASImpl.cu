@@ -4,7 +4,7 @@
 #include <cuda_runtime.h>
 
 //initialize empty CAS instance
-CASImpl::CASImpl() : texObj(0), texArray(nullptr), casOutputBuffer(nullptr), hostOutputBuffer(nullptr), hasAlpha(false), rows(0), cols(0)
+CASImpl::CASImpl() : texObj(0), texArray(nullptr), casOutputBuffer(nullptr), hostOutputBuffer(nullptr), hasAlpha(false), rows(0), cols(0), totalBytes(0)
 { }
 
 //destructor, destroy everything
@@ -16,10 +16,10 @@ CASImpl::~CASImpl()
 //initialize buffers and texture data based on the provided image dimensions
 void CASImpl::initializeMemory()
 {
-	const auto bytesPerElement = hasAlpha ? sizeof(uchar4) : sizeof(unsigned char) * 3;
+	totalBytes = rows * cols * (hasAlpha ? sizeof(uchar4) : sizeof(uchar3));
 	//initialize CAS output buffers and pinned memory for output
-	cudaMalloc(&casOutputBuffer, bytesPerElement * rows * cols);
-	cudaHostAlloc(&hostOutputBuffer, sizeof(unsigned char) * (hasAlpha ? 4 : 3) * rows * cols, cudaHostAllocDefault);
+	cudaMalloc(&casOutputBuffer, totalBytes);
+	cudaHostAlloc(&hostOutputBuffer, totalBytes, cudaHostAllocDefault);
 	//initialize texture
 	auto textureData = cuda_utils::createTextureData(rows, cols);
 	texObj = textureData.first;
@@ -63,6 +63,6 @@ const unsigned char* CASImpl::sharpenImage(const int casMode, const float sharpe
 		cas <uchar3, false, INTERLEAVED_RGBA> << <gridSize, blockSize >> > (texObj, sharpenStrength, contrastAdaption, reinterpret_cast<uchar3*>(casOutputBuffer), rows, cols);
 
 	//copy from GPU to HOST
-	cudaMemcpy(hostOutputBuffer, casOutputBuffer, rows * cols * sizeof(unsigned char) * (hasAlpha ? 4 : 3), cudaMemcpyDeviceToHost);
+	cudaMemcpy(hostOutputBuffer, casOutputBuffer, totalBytes, cudaMemcpyDeviceToHost);
 	return hostOutputBuffer;
 }

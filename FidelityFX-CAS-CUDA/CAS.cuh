@@ -3,6 +3,9 @@
 #include <cuda_fp16.h>
 #include "helper_math.h"
 
+#define PLANAR_RGB 0
+#define INTERLEAVED_RGBA 1
+
 //Main CAS kernel
 //Template: hasAlpha: whether the input image has an alpha channel
 //			casMode: whether the output image should be written as interleaved RGBA or planar RGB
@@ -33,7 +36,7 @@ __global__ void cas(cudaTextureObject_t texObj, const float sharpenStrength, con
 	{
 		if (__high2half(currentPixel.y) == __float2half(0.0f))
 		{
-			if constexpr (casMode == 0)
+			if constexpr (casMode == PLANAR_RGB)
 				casOutput[width * height * 3 + outputIndex] = 0;
 			else
 				casOutput[outputIndex] = make_uchar4(0, 0, 0, 0);
@@ -77,15 +80,15 @@ __global__ void cas(cudaTextureObject_t texObj, const float sharpenStrength, con
 	const half3 outColor = saturateh((filterWindow * wRGB + e) * rcpWeightRGB);
 	const half3 sharpenedValues = lerph(e, outColor, __float2half(sharpenStrength));
 
-	//write to global memory
+	//convert to uchar sRGB
 	const unsigned char colorR = halfToUchar(sRGB(__low2half(sharpenedValues.x)));
 	const unsigned char colorG = halfToUchar(sRGB(__high2half(sharpenedValues.x)));
 	const unsigned char colorB = halfToUchar(sRGB(sharpenedValues.y));
 	
 	//Write to global memory based on template params
 	//If hasAlpha is true, write the alpha channel as well
-	//if casMode == 0 -> write planar RGB
-	if constexpr (casMode == 0)
+	//if casMode == 0 -> write planar RGB (slower, strided writes)
+	if constexpr (casMode == PLANAR_RGB)
 	{
 		casOutput[outputIndex] = colorR;
 		casOutput[width * height + outputIndex] = colorG;
@@ -93,13 +96,15 @@ __global__ void cas(cudaTextureObject_t texObj, const float sharpenStrength, con
 		if constexpr (hasAlpha)
 			casOutput[width * height * 3 + outputIndex] = halfToUchar(__high2half(currentPixel.y));
 	}
-	else //write interleaved RGBA
+	//write interleaved RGBA
+	else
 	{
-		if constexpr (hasAlpha) {
+		//if alpha is needed, we fully utilize the memory coalescing by writing 4 bytes at once (1 memory transaction)
+		if constexpr (hasAlpha)
 			casOutput[outputIndex] = make_uchar4(colorR, colorG, colorB, halfToUchar(__high2half(currentPixel.y)));
-		} else
-		{
+		else
+			//uchar3 won't help with coalescing versus unsigned char* because of same alignment (1 byte)
+			//the compiler issues three memory transactions, but it is far better than writing an extra uchar and transfering it to the host
 			casOutput[outputIndex] = make_uchar3(colorR, colorG, colorB);
-		}
 	}
 }

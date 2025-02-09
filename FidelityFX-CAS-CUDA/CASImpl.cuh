@@ -17,6 +17,7 @@ private:
 	unsigned char* hostOutputBuffer;
 	bool hasAlpha;
 	unsigned int rows, cols;
+	unsigned long long totalBytes;
 	const dim3 blockSize { 16, 16 };
 
 	void initializeMemory();
