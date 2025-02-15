@@ -186,6 +186,7 @@
   <ItemGroup>
     <ClCompile Include="mainwindow.cpp" />
     <ClCompile Include="widget_utils.cpp" />
+    <ClCompile Include="ZoomableLabel.cpp" />
     <QtRcc Include="Resources.qrc" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
@@ -194,6 +195,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="widget_utils.hpp" />
+    <ClInclude Include="ZoomableLabel.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FidelityFX-CAS-CUDA\FidelityFX-CAS-CUDA.vcxproj">

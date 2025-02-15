@@ -32,6 +32,9 @@
     <ClCompile Include="mainwindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ZoomableLabel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="mainwindow.h">
@@ -40,6 +43,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="widget_utils.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ZoomableLabel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

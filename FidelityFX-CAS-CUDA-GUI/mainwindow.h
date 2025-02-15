@@ -5,11 +5,13 @@
 #include <QImage>
 #include <QLabel>
 #include <QMainWindow>
+#include <QScrollArea>
 #include <QSize>
 #include <QSlider>
 #include <QString>
 #include <QVBoxLayout>
 #include <QWidget>
+#include <ZoomableLabel.h>
 
 
 class MainWindow : public QMainWindow {
@@ -31,11 +33,13 @@ private:
     void setupImageView();
     void setupMainWidget();
     void addSliderLayout(QVBoxLayout *mainLayout, QSlider *slider, QLabel *label);
-    void updateImageView(const QImage& image);
+    void updateImageView(const QImage& image, const bool resetScale);
 
     QImage userImage, sharpenedImage;
     QSlider *sharpenStrength, *contrastAdaption;
-    QLabel *imageView, *sharpenStrengthLabel, *contrastAdaptionLabel;
+    ZoomableLabel* imageView;
+    QScrollArea* scrollArea;
+    QLabel *sharpenStrengthLabel, *contrastAdaptionLabel;
     void* casObj;
     QAction *openImageAction, *saveImageAction;
     const QSize targetImageSize;

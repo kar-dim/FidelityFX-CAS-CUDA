@@ -20,6 +20,7 @@
 #include <QVBoxLayout>
 #include <QWidget>
 #include <type_traits>
+#include <QScrollArea>
 
 #define CLAMP(x) qBound(0.0f, x/100.0f, 1.0f)
 
@@ -27,7 +28,8 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     sharpenStrength(new QSlider(Qt::Horizontal)),
     contrastAdaption(new QSlider(Qt::Horizontal)),
-    imageView(new QLabel),
+    imageView(new ZoomableLabel),
+    scrollArea(new QScrollArea),
     sharpenStrengthLabel(new QLabel("Sharpen Strength")),
     contrastAdaptionLabel(new QLabel("Contrast Adaption")),
     casObj(CAS_initialize()),
@@ -88,7 +90,13 @@ void MainWindow::setupMainWidget()
     QVBoxLayout *mainLayout = new QVBoxLayout;
     addSliderLayout(mainLayout, sharpenStrength, sharpenStrengthLabel);
     addSliderLayout(mainLayout, contrastAdaption, contrastAdaptionLabel);
-    mainLayout->addWidget(imageView);
+
+    // Create Scroll Area
+    scrollArea->setAlignment(Qt::AlignCenter);
+    scrollArea->setWidgetResizable(true);
+    scrollArea->setWidget(imageView);
+
+    mainLayout->addWidget(scrollArea);
     // Central Widget
     QWidget *centralWidget = new QWidget;
     centralWidget->setLayout(mainLayout);
@@ -105,11 +113,12 @@ void MainWindow::addSliderLayout(QVBoxLayout *mainLayout, QSlider *slider, QLabe
 }
 
 //updates the Image label to show the passed-in QImage
-void MainWindow::updateImageView(const QImage& image)
+void MainWindow::updateImageView(const QImage& image, const bool resetScale)
 {
     QPixmap pixmap = QPixmap::fromImage(image);
     WidgetUtils::scalePixmap(pixmap, targetImageSize);
-    imageView->setPixmap(pixmap);
+    resetScale ? imageView->setImage(pixmap) : imageView->updateImage(pixmap);
+    scrollArea->setMinimumSize(pixmap.size() * 1.07);
 }
 
 //Open an image and display it to the user. Reinitialize CAS with the new dimensions
@@ -128,6 +137,8 @@ void MainWindow::openImage()
 	}
 
 	userImage = std::move(readerImage);
+    sharpenedImage = QImage(userImage);
+
     //convert to RGBA interleaved format
     userImageHasAlpha = userImage.hasAlphaChannel();
     userImage = userImage.convertToFormat(QImage::Format_RGBA8888);
@@ -135,7 +146,7 @@ void MainWindow::openImage()
     CAS_supplyImage(casObj, userImage.constBits(), userImageHasAlpha, userImage.height(), userImage.width());
 
     // Only scale down if the image is larger than the target size
-    updateImageView(userImage);
+    updateImageView(userImage, true);
     WidgetUtils::setVisibility(true, imageView, sharpenStrength, contrastAdaption, sharpenStrengthLabel, contrastAdaptionLabel);
     saveImageAction->setEnabled(true);
 
@@ -173,6 +184,5 @@ void MainWindow::sliderValueChanged()
     const auto sharpenedImageFormat = userImageHasAlpha ? QImage::Format_RGBA8888 : QImage::Format_RGB888;
     const uchar* casData = CAS_sharpenImage(casObj, 1, CLAMP(sharpenStrength->value()), CLAMP(contrastAdaption->value()));
     sharpenedImage = QImage(casData, userImage.width(), userImage.height(), userImage.width() * sharpenedImageChannels, sharpenedImageFormat);
-    updateImageView(sharpenedImage);
-
+    updateImageView(sharpenedImage, false);
 }
