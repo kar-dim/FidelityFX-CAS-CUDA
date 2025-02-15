@@ -1,4 +1,5 @@
 #include "..\FidelityFX-CAS-CUDA\include\CASLibWrapper.h"
+#include <functional>
 #include "mainwindow.h"
 #include "widget_utils.hpp"
 #include <QApplication>
@@ -81,16 +82,8 @@ void MainWindow::setupMenu()
 
     //View menu
     QMenu* viewMenu = menuBar()->addMenu("View");
-    connect(viewMenu->addAction("Zoom In"), &QAction::triggered, this, [this]() 
-    { 
-        QWheelEvent event(QPoint(0, 0), QPoint(0, 0), QPoint(0, 120), QPoint(0, 120), Qt::NoButton, Qt::ControlModifier, Qt::ScrollBegin, false, Qt::MouseEventNotSynthesized);
-        QApplication::sendEvent(imageView, &event);
-    });
-    connect(viewMenu->addAction("Zoom Out"), &QAction::triggered, this, [this]() 
-    {
-        QWheelEvent event(QPoint(0, 0), QPoint(0, 0), QPoint(0, -120), QPoint(0, -120), Qt::NoButton, Qt::ControlModifier, Qt::ScrollBegin, false, Qt::MouseEventNotSynthesized);
-        QApplication::sendEvent(imageView, &event);
-    });
+    connect(viewMenu->addAction("Zoom In"), &QAction::triggered, this, std::bind(&MainWindow::sendZoomEvent, this, 120));
+    connect(viewMenu->addAction("Zoom Out"), &QAction::triggered, this, std::bind(&MainWindow::sendZoomEvent, this, -120));
 
     // Help menu
     QMenu* helpMenu = menuBar()->addMenu("Help");
@@ -206,6 +199,12 @@ void MainWindow::sliderValueChanged()
     const uchar* casData = CAS_sharpenImage(casObj, 1, CLAMP(sharpenStrength->value()), CLAMP(contrastAdaption->value()));
     sharpenedImage = QImage(casData, userImage.width(), userImage.height(), userImage.width() * sharpenedImageChannels, sharpenedImageFormat);
     updateImageView(sharpenedImage, false);
+}
+
+void MainWindow::sendZoomEvent(const int delta) 
+{
+    QWheelEvent event(QPoint(0, 0), QPoint(0, 0), QPoint(0, delta), QPoint(0, delta), Qt::NoButton, Qt::ControlModifier, Qt::ScrollBegin, false, Qt::MouseEventNotSynthesized);
+    QApplication::sendEvent(imageView, &event);
 }
 
 //change the cursor to hand when the user holds the left click button

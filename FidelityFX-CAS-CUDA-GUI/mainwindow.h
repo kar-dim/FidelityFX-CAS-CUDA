@@ -27,6 +27,7 @@ private slots:
     void openImage();
     void saveImage();
     void sliderValueChanged();
+    void sendZoomEvent(const int delta);
 
 protected:
     void mousePressEvent(QMouseEvent* event) override;
