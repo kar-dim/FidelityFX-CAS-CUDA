@@ -188,6 +188,7 @@ void MainWindow::sliderValueChanged()
     updateImageView(sharpenedImage, false);
 }
 
+//change the cursor to hand when the user holds the left click button
 void MainWindow::mousePressEvent(QMouseEvent* event)
 {
     if (event->button() == Qt::LeftButton) 
@@ -197,6 +198,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
     }
 }
 
+//pan the image based on the mouse movement
 void MainWindow::mouseMoveEvent(QMouseEvent* event)
 {
     if (event->buttons() & Qt::LeftButton) 
@@ -208,6 +210,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
     }
 }
 
+//revert the cursor icon from hand to the original cursor when the user releases the left click
 void MainWindow::mouseReleaseEvent(QMouseEvent* event)
 {
     if (event->button() == Qt::LeftButton)
