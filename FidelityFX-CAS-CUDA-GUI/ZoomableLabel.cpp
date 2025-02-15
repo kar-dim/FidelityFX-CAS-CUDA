@@ -28,6 +28,8 @@ void ZoomableLabel::updateImage(const QPixmap& pixmap)
 
 void ZoomableLabel::wheelEvent(QWheelEvent* event) 
 {
+    if (originalPixmap.isNull())
+        return;
     scaleFactor = CLAMP(event->angleDelta().y() > 0 ? scaleFactor * 1.1 : scaleFactor / 1.1);
     scaleImage();
 }

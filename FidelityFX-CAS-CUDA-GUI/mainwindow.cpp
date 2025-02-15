@@ -15,14 +15,15 @@
 #include <QMessageBox>
 #include <QPixmap>
 #include <QScreen>
+#include <QScrollArea>
+#include <QScrollBar>
 #include <QSlider>
 #include <QString>
 #include <QtMinMax>
 #include <QVBoxLayout>
+#include <QWheelEvent>
 #include <QWidget>
 #include <type_traits>
-#include <QScrollArea>
-#include <QScrollBar>
 
 #define CLAMP(x) qBound(0.0f, x/100.0f, 1.0f)
 
@@ -74,8 +75,23 @@ void MainWindow::setupMenu()
     openImageAction = fileMenu->addAction("Open Image");
     saveImageAction = fileMenu->addAction("Save Image");
     saveImageAction->setEnabled(false);
+    connect(fileMenu->addAction("Exit"), &QAction::triggered, this, &QApplication::quit);
     connect(openImageAction, &QAction::triggered, this, &MainWindow::openImage);
     connect(saveImageAction, &QAction::triggered, this, &MainWindow::saveImage);
+
+    //View menu
+    QMenu* viewMenu = menuBar()->addMenu("View");
+    connect(viewMenu->addAction("Zoom In"), &QAction::triggered, this, [this]() 
+    { 
+        QWheelEvent event(QPoint(0, 0), QPoint(0, 0), QPoint(0, 120), QPoint(0, 120), Qt::NoButton, Qt::ControlModifier, Qt::ScrollBegin, false, Qt::MouseEventNotSynthesized);
+        QApplication::sendEvent(imageView, &event);
+    });
+    connect(viewMenu->addAction("Zoom Out"), &QAction::triggered, this, [this]() 
+    {
+        QWheelEvent event(QPoint(0, 0), QPoint(0, 0), QPoint(0, -120), QPoint(0, -120), Qt::NoButton, Qt::ControlModifier, Qt::ScrollBegin, false, Qt::MouseEventNotSynthesized);
+        QApplication::sendEvent(imageView, &event);
+    });
+
     // Help menu
     QMenu* helpMenu = menuBar()->addMenu("Help");
     QAction* aboutQtAction = helpMenu->addAction("About Qt");
