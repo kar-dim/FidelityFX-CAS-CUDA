@@ -38,6 +38,13 @@ The projects are included in a Visual Studio Solution (```.sln```).
 4. The sharpening is applied in realtime each time a parameter is changed, to allow the user to view the updated image with various configurations.
 5. (Optional) Save the processed image using the **Save Image** from the File menu.
 
+## GUI Samples
+Original image            |  Sharpened image
+:-------------------------:|:-------------------------:
+![FidelityFX-CAS-CUDA-GUI_y8DbO9k5dL](https://github.com/user-attachments/assets/5343a3c1-788b-4d42-b5d2-851357001e9c)  |  ![FidelityFX-CAS-CUDA-GUI_UomvduN1Rm](https://github.com/user-attachments/assets/b31b7cfe-1546-4cfc-a677-76d6ca9694dc)
+![FidelityFX-CAS-CUDA-GUI_jUkSm8z70Q](https://github.com/user-attachments/assets/d5fb820b-a71e-4425-ac1f-a7b5d6bc3191)  |  ![FidelityFX-CAS-CUDA-GUI_a6DUhPrKd0](https://github.com/user-attachments/assets/0edbc210-55f0-49fd-b2b0-f3a5f62a8f2e)
+
+
 ## Prerequisites/Dependencies
 
 - **NVIDIA GPU**: An NVIDIA GPU is required in order to use the CAS DLL.
