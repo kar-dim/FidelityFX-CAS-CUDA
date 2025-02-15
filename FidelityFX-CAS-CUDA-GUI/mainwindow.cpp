@@ -21,6 +21,7 @@
 #include <QWidget>
 #include <type_traits>
 #include <QScrollArea>
+#include <QScrollBar>
 
 #define CLAMP(x) qBound(0.0f, x/100.0f, 1.0f)
 
@@ -185,4 +186,30 @@ void MainWindow::sliderValueChanged()
     const uchar* casData = CAS_sharpenImage(casObj, 1, CLAMP(sharpenStrength->value()), CLAMP(contrastAdaption->value()));
     sharpenedImage = QImage(casData, userImage.width(), userImage.height(), userImage.width() * sharpenedImageChannels, sharpenedImageFormat);
     updateImageView(sharpenedImage, false);
+}
+
+void MainWindow::mousePressEvent(QMouseEvent* event)
+{
+    if (event->button() == Qt::LeftButton) 
+    {
+        lastMousePos = event->pos();
+        setCursor(Qt::ClosedHandCursor);
+    }
+}
+
+void MainWindow::mouseMoveEvent(QMouseEvent* event)
+{
+    if (event->buttons() & Qt::LeftButton) 
+    {
+        QPoint delta = event->pos() - lastMousePos;
+        lastMousePos = event->pos();
+        scrollArea->horizontalScrollBar()->setValue(scrollArea->horizontalScrollBar()->value() - delta.x());
+        scrollArea->verticalScrollBar()->setValue(scrollArea->verticalScrollBar()->value() - delta.y());
+    }
+}
+
+void MainWindow::mouseReleaseEvent(QMouseEvent* event)
+{
+    if (event->button() == Qt::LeftButton)
+        setCursor(Qt::ArrowCursor);
 }

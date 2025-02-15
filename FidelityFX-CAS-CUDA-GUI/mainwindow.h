@@ -5,6 +5,8 @@
 #include <QImage>
 #include <QLabel>
 #include <QMainWindow>
+#include <QMouseEvent>
+#include <QPoint>
 #include <QScrollArea>
 #include <QSize>
 #include <QSlider>
@@ -13,8 +15,8 @@
 #include <QWidget>
 #include <ZoomableLabel.h>
 
-
-class MainWindow : public QMainWindow {
+class MainWindow : public QMainWindow 
+{
     Q_OBJECT
 
 public:
@@ -25,6 +27,11 @@ private slots:
     void openImage();
     void saveImage();
     void sliderValueChanged();
+
+protected:
+    void mousePressEvent(QMouseEvent* event) override;
+    void mouseMoveEvent(QMouseEvent* event) override;
+    void mouseReleaseEvent(QMouseEvent* event) override;
 
 private:
     const QString imageDialogFilterText { "Images (*.png *.jpg *.bmp *.webp *.tiff)" };
@@ -44,6 +51,7 @@ private:
     QAction *openImageAction, *saveImageAction;
     const QSize targetImageSize;
     bool userImageHasAlpha;
+    QPoint lastMousePos;
 };
 
 #endif // MAINWINDOW_H
