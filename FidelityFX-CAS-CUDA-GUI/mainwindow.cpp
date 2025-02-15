@@ -1,6 +1,7 @@
 #include "..\FidelityFX-CAS-CUDA\include\CASLibWrapper.h"
 #include "mainwindow.h"
 #include "widget_utils.hpp"
+#include <QApplication>
 #include <QFileDialog>
 #include <QFileDialog>
 #include <QGuiApplication>
@@ -65,7 +66,7 @@ void MainWindow::setupSlider(QSlider *slider, QLabel *label, const int value) co
     connect(slider, &QSlider::valueChanged, this, &MainWindow::sliderValueChanged);
 }
 
-//setup "File" menu
+//setup menus
 void MainWindow::setupMenu()
 {
     // File Menu
@@ -75,6 +76,10 @@ void MainWindow::setupMenu()
     saveImageAction->setEnabled(false);
     connect(openImageAction, &QAction::triggered, this, &MainWindow::openImage);
     connect(saveImageAction, &QAction::triggered, this, &MainWindow::saveImage);
+    // Help menu
+    QMenu* helpMenu = menuBar()->addMenu("Help");
+    QAction* aboutQtAction = helpMenu->addAction("About Qt");
+    connect(aboutQtAction, &QAction::triggered, this, &QApplication::aboutQt);
 }
 
 //setup Main image view
@@ -157,7 +162,6 @@ void MainWindow::openImage()
     //reset sliders
     sharpenStrength->setValue(0);
     contrastAdaption->setValue(100);
-    
 }
 
 //Attempt to save the sharpened image
