@@ -149,8 +149,7 @@ inline __device__ half3 lerph(const half3 v0, const half3 v1, const half t)
 //converts a half in the range [0,1] to an unsigned char in the range [0,255]
 inline __device__ unsigned char halfToUchar(const half value)
 {
-    const half maxPixelValue = __float2half(255.0f);
-    return __half2uchar_rz(hclamp(value * maxPixelValue, CUDART_ZERO_FP16, maxPixelValue));
+    return __half2uchar_rz(value * __float2half(255.0f));
 }
 
 //Convert a linear RGB value to sRGB value
