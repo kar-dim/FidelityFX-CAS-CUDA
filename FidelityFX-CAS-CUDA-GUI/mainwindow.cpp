@@ -1,7 +1,7 @@
 #include "..\FidelityFX-CAS-CUDA\include\CASLibWrapper.h"
-#include <functional>
 #include "mainwindow.h"
 #include "widget_utils.hpp"
+#include <functional>
 #include <QApplication>
 #include <QFileDialog>
 #include <QFileDialog>
@@ -20,6 +20,7 @@
 #include <QScrollBar>
 #include <QSlider>
 #include <QString>
+#include <QtGlobal>
 #include <QtMinMax>
 #include <QVBoxLayout>
 #include <QWheelEvent>
